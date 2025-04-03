@@ -8,13 +8,15 @@ function App() {
 
   return (
     <>
-       <Router>
-      <Routes>
-        {/* <Route path="/" element={<Home />} /> */}
-        <Route path="/users" element={<UsersPage />} />
-      </Routes>
-    </Router>
-    <Header></Header>
+    <div className="dark bg-background text-foreground min-h-screen">
+      <Router>
+      <Header></Header>
+        <Routes>
+          {/* <Route path="/" element={<Home />} /> */}
+          <Route path="/users" element={<UsersPage />} />
+        </Routes>
+      </Router>
+    </div>
     </>
     
   )
