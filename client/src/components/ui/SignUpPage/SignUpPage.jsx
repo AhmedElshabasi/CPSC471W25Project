@@ -18,7 +18,7 @@ const SignUpPage = () => {
 
   const handleCreateAccount = async () => {
     if (!username || !password || !firstname || !lastname || !password) {
-      console.log(`username: ${username}, password: ${password}, phonenum: ${phonenum}, confirm: ${confirmPassword}`);
+      console.log(`username: ${username}, password: ${password}, phonenum: ${phonenum}`);
       setFormError("Please fill out all required fields.");
       return;
     }
