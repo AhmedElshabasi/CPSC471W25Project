@@ -133,7 +133,7 @@ const SignUpPage = () => {
               {/* Buttons */}
               <div className="flex items-center gap-4">
                 <Button onClick={handleCreateAccount}>
-                  Save Changes
+                  Sign Up
                 </Button>
               </div>
             </CardContent>
