@@ -82,7 +82,7 @@ Email_address					VARCHAR(255)		NOT NULL,
 Username						VARCHAR(30)			NOT NULL UNIQUE,
 Phone_number					VARCHAR(15)			NOT NULL,
 Password						VARCHAR(255)		NOT NULL,
-Ticket_id						INT 				NOT NULL,
+Ticket_id						INT 				        ,
 PRIMARY KEY (Customer_id)
 );
 

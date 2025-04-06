@@ -19,7 +19,7 @@ userRouter.post("/", async (request, response, next) => {
     // Insert the user into the database
     const result = await client.query(
       `INSERT INTO CUSTOMER (First_name, Last_name, Email_address, Username, Phone_number, Password) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) 
+       VALUES ($1, $2, $3, $4, $5, $6) 
        RETURNING First_name, Last_name, Email_address, Username, Phone_number, Password`,
       [
         firstname,
@@ -44,3 +44,5 @@ userRouter.post("/", async (request, response, next) => {
     }
   }
 });
+
+export default userRouter;
