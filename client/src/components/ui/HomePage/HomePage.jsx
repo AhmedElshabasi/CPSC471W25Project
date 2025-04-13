@@ -7,6 +7,13 @@ import {
 } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
 
+import {
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+
 import image1 from "@/assets/image_1.webp";
 import image2 from "@/assets/image_2.webp";
 import image3 from "@/assets/image_3.webp";
@@ -17,7 +24,8 @@ const images = [image1, image2, image3, image4, image5];
 
 const Home = () => {
   return (
-    <div className="flex justify-center items-center flex-col">
+    <>
+    <div className="flex justify-center flex-col items-center">
       <Carousel className="w-[90%]">
         <CarouselContent>
           {images.map((image, index) => (
@@ -39,8 +47,10 @@ const Home = () => {
         <CarouselPrevious />
         <CarouselNext />
       </Carousel>
-      <div className="">Hello</div>
     </div>
+    <div className="text-3xl ml-[60pt] my-[20pt]">Movies</div>
+        
+    </>
   );
 };
 
