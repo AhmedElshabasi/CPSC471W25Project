@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,72 @@ import { Pencil, Ticket, User } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const UsersPage = () => {
+  const [username, setUsername] = useState("");
+  const [firstname, setFirstname] = useState("");
+  const [lastname, setLastname] = useState("");
+  const [email, setEmail] = useState("");
+  const [phonenum, setPhonenum] = useState("");
+
+  const handleUpdateProfile = async () => {
+    try {
+      const response = await fetch("http://localhost:3001/api/users", {
+        method: "PUT", // or PATCH
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          firstname,
+          lastname,
+          email,
+          phonenum,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.error}`);
+        return;
+      }
+
+      alert("Profile updated successfully!");
+    } catch (error) {
+      console.error("Update failed:", error);
+      alert("An error occurred while updating your profile.");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm("Are you sure you want to delete your account? This action is irreversible.");
+  
+    if (!confirmed) return;
+  
+    try {
+      const response = await fetch("http://localhost:3001/api/users", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username }), // assuming username is in state
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.error}`);
+        return;
+      }
+  
+      alert("Account deleted successfully!");
+      // You might want to redirect to home or login page after deletion
+      window.location.href = "/"; 
+    } catch (error) {
+      console.error("Delete failed:", error);
+      alert("An error occurred while deleting your account.");
+    }
+  };
+
+
+
   return (
     <div className="min-h-screen p-6 max-w-5xl mx-auto">
       <Tabs defaultValue="tickets" className="w-full">
@@ -58,39 +124,44 @@ const UsersPage = () => {
               {/* Username */}
               <div>
                 <Label htmlFor="username">Username</Label>
-                <Input id="username" defaultValue="johnny123" />
+                <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
               </div>
 
               {/* First and Last Name */}
               <div className="flex gap-4">
                 <div className="w-1/2">
                   <Label htmlFor="first-name">First Name</Label>
-                  <Input id="first-name" defaultValue="John" />
+                  <Input id="first-name" value={firstname} onChange={(e) => setFirstname(e.target.value)} />
                 </div>
                 <div className="w-1/2">
                   <Label htmlFor="last-name">Last Name</Label>
-                  <Input id="last-name" defaultValue="Doe" />
+                  <Input id="last-name" value={lastname} onChange={(e) => setLastname(e.target.value)} />
                 </div>
               </div>
 
               {/* Email */}
               <div>
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" defaultValue="john@example.com" />
+                <Input id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
 
               {/* Phone Number */}
               <div>
                 <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" defaultValue="+1 234 567 8900" />
+                <Input id="phone" value={phonenum} onChange={(e) => setPhonenum(e.target.value)} />
               </div>
 
               {/* Buttons */}
               <div className="flex items-center gap-4">
-                <Button>Save Changes</Button>
+                <Button onClick={handleUpdateProfile}>Save Changes</Button>
                 <Link to="/change-password">
                   <Button variant="outline">Change Password</Button>
                 </Link>
+              </div>
+              <div className="flex items-center gap-4">
+                 <Button variant="destructive" onClick={handleDeleteAccount}>
+                    Delete Account
+                 </Button>
               </div>
             </CardContent>
           </Card>

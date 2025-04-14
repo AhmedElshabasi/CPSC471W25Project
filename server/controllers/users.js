@@ -45,4 +45,60 @@ userRouter.post("/", async (request, response, next) => {
   }
 });
 
+// Update user profile
+userRouter.put("/", async (request, response, next) => {
+  const { username, firstname, lastname, email, phonenum } = request.body;
+
+  if (!username || !firstname || !lastname || !email || !phonenum) {
+    return response.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const result = await client.query(
+      `UPDATE CUSTOMER
+       SET First_name = $1,
+           Last_name = $2,
+           Email_address = $3,
+           Phone_number = $4
+       WHERE Username = $5
+       RETURNING First_name, Last_name, Email_address, Username, Phone_number`,
+      [firstname, lastname, email, phonenum, username]
+    );
+
+    if (result.rowCount === 0) {
+      return response.status(404).json({ error: "User not found" });
+    }
+
+    response.status(200).json({ user: result.rows[0] });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Delete user account
+userRouter.delete("/", async (request, response, next) => {
+  const { username } = request.body;
+
+  if (!username) {
+    return response.status(400).json({ error: "Username is required" });
+  }
+
+  try {
+    const result = await client.query(
+      `DELETE FROM CUSTOMER WHERE Username = $1 RETURNING *`,
+      [username]
+    );
+
+    if (result.rowCount === 0) {
+      return response.status(404).json({ error: "User not found" });
+    }
+
+    response.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
+
 export default userRouter;
