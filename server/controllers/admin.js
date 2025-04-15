@@ -5,23 +5,6 @@ import jwt from "jsonwebtoken";
 const adminRouter = express.Router();
 const JWT_SECRET = "your_super_secret_key";
 
-// Insert a default admin for testing
-const insertDefaultAdmin = async () => {
-  try {
-    await client.query(
-      `INSERT INTO ADMIN (Admin_Id, Role, Permissions, Username, Phone_number, Password)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING Admin_Id, Role, Permissions, Username, Phone_number, Password`,
-      [1, "MANAGER", "FULL_ACCESS", "admin", "1234567890", "password123"]
-    );
-    console.log("Default admin inserted");
-  } catch (error) {
-    console.error("Error inserting default admin:", error);
-  }
-};
-
-insertDefaultAdmin();
-
 // Admin login route
 adminRouter.post("/auth/login", async (req, res) => {
   const { username, phonenum, password } = req.body;
