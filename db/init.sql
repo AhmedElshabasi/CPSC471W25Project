@@ -17,7 +17,7 @@ Phone_number					VARCHAR(15),
 PRIMARY KEY (Company_name));
 
 CREATE TABLE THEATRE(
-Location						VARCHAR(30)				NOT NULL,
+Location						VARCHAR(255)				NOT NULL,
 Phone_number					VARCHAR(15)				NOT NULL,
 Company_name					CHAR(30)				NOT NULL,
 PRIMARY KEY (Location),					
