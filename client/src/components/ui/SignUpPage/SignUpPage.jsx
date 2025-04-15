@@ -17,45 +17,49 @@ const SignUpPage = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleCreateAccount = async () => {
-    if (!username || !password || !firstname || !lastname || !password) {
-      console.log(`username: ${username}, password: ${password}, phonenum: ${phonenum}`);
+    if (!username || !password || !firstname || !lastname || !phonenum || !email) {
       setFormError("Please fill out all required fields.");
       return;
     }
-
-    // Reset the error state
-    setFormError("");
-
+  
+    setFormError(""); // Reset error
+  
     try {
-        const response = await fetch("http://localhost:3001/api/users", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username,
-            firstname,
-            lastname,
-            email,
-            phonenum,
-            password,
-          }),
-        });
+      const response = await fetch("http://localhost:3001/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          firstname,
+          lastname,
+          email,
+          phonenum,
+          password,
+        }),
+      });
   
-        if (!response.ok) {
-          const errorData = await response.json();
-          setFormError(errorData.error || "Failed to create account.");
-          return;
-        }
+      const data = await response.json();
   
-        const data = await response.json();
-        console.log("Account created:", data);
-      } catch (error) {
-        console.log(`in the error: username: ${username}, password: ${password}, phonenum: ${phonenum}`);
-        console.error("Error creating account:", error);
-        setFormError("An unexpected error occurred. Please try again.");
+      if (!response.ok) {
+        setFormError(data.error || "Failed to create account.");
+        return;
       }
-    };   
+  
+      // Save token to localStorage
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+  
+      alert("Account created and logged in!");
+      window.location.href = "/users";
+    } catch (error) {
+      console.error("Error creating account:", error);
+      setFormError("An unexpected error occurred. Please try again.");
+    }
+  };
+   
 
     return (
         <div className="min-h-screen p-6 max-w-5xl mx-auto">
