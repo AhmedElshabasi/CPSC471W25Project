@@ -19,31 +19,32 @@ const UsersPage = () => {
   const handleUpdateProfile = async () => {
     try {
       const response = await fetch("http://localhost:3001/api/users", {
-        method: "PUT", // or PATCH
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
-          username,
           firstname,
           lastname,
           email,
           phonenum,
         }),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         alert(`Error: ${errorData.error}`);
         return;
       }
-
+  
       alert("Profile updated successfully!");
     } catch (error) {
       console.error("Update failed:", error);
       alert("An error occurred while updating your profile.");
     }
   };
+  
 
   const handleDeleteAccount = async () => {
     const confirmed = window.confirm("Are you sure you want to delete your account? This action is irreversible.");
@@ -56,7 +57,7 @@ const UsersPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username }), // assuming username is in state
+        body: JSON.stringify({ username }),
       });
   
       if (!response.ok) {
@@ -66,7 +67,6 @@ const UsersPage = () => {
       }
   
       alert("Account deleted successfully!");
-      // You might want to redirect to home or login page after deletion
       window.location.href = "/"; 
     } catch (error) {
       console.error("Delete failed:", error);
