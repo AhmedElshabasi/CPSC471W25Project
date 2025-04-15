@@ -7,7 +7,6 @@ import './App.css'
 import Header from "/src/components/ui/header"
 
 function App() {
-
   return (
     <>
     <div className="dark bg-black text-foreground min-h-screen">
@@ -21,8 +20,8 @@ function App() {
         </Routes>
       </Router>
     </div>
+
     </>
-    
-  )
+  );
 }
-export default App
+export default App;
