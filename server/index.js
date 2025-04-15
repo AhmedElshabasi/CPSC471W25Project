@@ -22,10 +22,10 @@ const main = async () => {
 
     // Retrieve the movie count
     const movie = await client.query(`SELECT COUNT(*) FROM MOVIE`)
-    const movieCount = movie.rowCount
+    const movieCount = movie.rows[0].count
 
     // Check if the movies have been populated, otherwise populate the database
-    if (movieCount === 1){
+    if (movieCount === '0'){
       console.log("Populating Movie Database")
       await moviePopulate();
     }
