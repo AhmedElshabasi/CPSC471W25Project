@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import UsersPage from "./components/ui/UsersPage/UsersPage";
 import SignUpPage from "./components/ui/SignUpPage/SignUpPage";
 import Home from "./components/ui/HomePage/HomePage";
+import TicketPage from "./components/TicketPage";
 import { useState } from 'react'
 import './App.css'
 import Header from "/src/components/ui/header"
@@ -17,6 +18,7 @@ function App() {
           <Route path='/' element={<Home />} />
           <Route path="/users" element={<UsersPage />} />
           <Route path="/signUp" element={<SignUpPage />} />
+          <Route path="/movie/:id" element={<TicketPage />} />
           {/**<Route path="/admin" element={<AdminPage />} /> **/}
         </Routes>
       </Router>
