@@ -24,9 +24,6 @@ function Header() {
         <Link to="/users">
           <Button className="h-[60%]">Login</Button>
         </Link>
-        <Link to="/admin">
-          <Button className="h-[60%]">Admin</Button>
-        </Link>
       </div>
     </div>
   );
