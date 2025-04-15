@@ -4,6 +4,7 @@ import pkg from "pg";
 const { Client } = pkg;
 import cors from 'cors';
 import createServer from "./utils/server.js";
+import { moviePopulate } from "./controllers/moviesPopulate.js";
 
 const app = createServer();
 
@@ -18,6 +19,19 @@ const main = async () => {
   try {
     await client.connect();
     console.log("Connection has been established successfully.");
+
+    // Retrieve the movie count
+    const movie = await client.query(`SELECT COUNT(*) FROM MOVIE`)
+    const movieCount = movie.rowCount
+
+    // Check if the movies have been populated, otherwise populate the database
+    if (movieCount === 1){
+      console.log("Populating Movie Database")
+      await moviePopulate();
+    }
+    else{
+      console.log("Movies Populated Already")
+    }
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

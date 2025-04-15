@@ -149,11 +149,11 @@ PRIMARY KEY (Comment_id)
 
 
 CREATE TABLE MOVIE(
-Name						VARCHAR(30)				NOT NULL,		
+Name						VARCHAR(255)				NOT NULL,		
 Genre						VARCHAR(15)				NOT NULL,		
 PG_rating					VARCHAR(30)				NOT NULL,		
 Release_date				DATE					NOT NULL,
-Description					VARCHAR(255)			NOT NULL,
+Description					VARCHAR(1000)			NOT NULL,
 Duration					TIME				    NOT NULL,		
 End_time					TIME,			
 Start_time					TIME,				
