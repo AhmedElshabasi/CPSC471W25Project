@@ -32,35 +32,8 @@ import {
 
 
 const TicketPage = ({movieName}) => {
-
-  const frameworks = [
-    {
-      value: "next.js",
-      label: "Next.js",
-    },
-    {
-      value: "sveltekit",
-      label: "SvelteKit",
-    },
-    {
-      value: "nuxt.js",
-      label: "Nuxt.js",
-    },
-    {
-      value: "remix",
-      label: "Remix",
-    },
-    {
-      value: "astro",
-      label: "Astro",
-    },
-  ]
   
   const params = useParams()
-
-  const [open, setOpen] = useState(false)
-  const [value, setValue] = useState("")
-
   // Use state to cache and trigger re-renders
   const [movieData, setMovieData] = useState([])
 
@@ -98,9 +71,8 @@ const retrieveMovie = async () => {
   }
 
 }
-
-// Below contains template code retrieved from: https://ui.shadcn.com/docs/components/combobox#installation
-  return(
+ 
+return(
   <div className="w-full h-mvh flex justify-center items-center py-[20pt]">
     <Card className="w-[70%] h-full">
       <CardHeader className="flex gap-1">
