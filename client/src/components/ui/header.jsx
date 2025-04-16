@@ -63,7 +63,7 @@ function Header() {
         <Link to="/signup">
           <Button className="h-[60%]">Sign Up</Button>
         </Link>
-        <Link to="/users">
+        <Link to="/login">
           <Button className="h-[60%]">Login</Button>
         </Link>
       </div>
