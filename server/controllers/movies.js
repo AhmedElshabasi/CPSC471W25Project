@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 dotenv.config()
-import client from "../index.js"
+import client from "../index.js";
 
 const API_KEY = process.env.TMDB_API_KEY
 const movieRouter = express.Router();
@@ -10,9 +10,8 @@ const movieRouter = express.Router();
 movieRouter.get("/movies", async (req, res) => {
   try {
     // Select all movie details
-    const response = await client.query(`SELECT * FROM MOVIE`)
-    return await res.json(response)
-    
+    const response = await client.query(`SELECT * FROM MOVIE`);
+    return await res.json(response);
   } catch (error) {
     res.status(500).json({ error: "No movies in the database." });
   }
@@ -37,5 +36,22 @@ movieRouter.get("/movies/image", async (req, res) => {
     res.status(500).json({error: "Unable to fetch Movie image"})
   }
 })
+
+movieRouter.post("/movie", async (req, res) => {
+  const { movieName } = req.body;
+  try {
+    const result = await client.query(`SELECT * FROM MOVIE WHERE Name = $1`, [
+      movieName,
+    ]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "No such movie in database." });
+    }
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: "Could not retrieve movie from database." });
+  }
+});
 
 export default movieRouter;

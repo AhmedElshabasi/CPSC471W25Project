@@ -1,8 +1,9 @@
 import express from "express";
 import cors from "cors";
-import movieRouter from "../controllers/movies.js"
+import movieRouter from "../controllers/movies.js";
 import userRouter from "../controllers/users.js";
 import theatreRouter from "../controllers/theatre.js"
+import adminRouter from "../controllers/admin.js";
 
 const createServer = () => {
   const app = express();
@@ -12,7 +13,8 @@ const createServer = () => {
   app.use(cors());
 
   app.use("/api/users", userRouter);
-  app.use("/api/movies", movieRouter)
+  app.use("/api/movies", movieRouter);
+  app.use("/api/admin", adminRouter);
   app.use("/api/theatre", theatreRouter)
 
   return app;
