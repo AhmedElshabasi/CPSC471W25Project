@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Input } from "./input";
 import { Button } from "./button";
@@ -6,42 +6,45 @@ import { Film } from "lucide-react";
 
 function Header() {
   const [search, setSearch] = useState("");
+  const [movieData, setMovieData] = useState([]);
 
-  const searchMovie = async (e) => {
-    if (e.key === "Enter" && search.trim()) {
+  useEffect(() => {
+    const fetchMovies = async () => {
       try {
-        const response = await fetch("http://localhost:3001/api/movies/movie", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ movieName: search }),
-        });
-
-        if (!response.ok) {
-          console.log("Movie not found.");
-          return;
-        }
-
-        const data = await response.json();
-        alert(data.rows[0].name);
+        const data = await retrieveMovie();
+        setMovieData(data.rows);
       } catch (error) {
-        console.error("Error finding movie:", error.message);
+        console.error("Error fetching Movies:", error.message);
       }
+    };
+    fetchMovies();
+  }, []);
+
+  const retrieveMovie = async () => {
+    try {
+      const response = await fetch("http://localhost:3001/api/movies/movies");
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching Movies:", error.message);
     }
   };
 
-  // const retrieveMovie = async (e) => {
-  //   if (e.key === "Enter" && search.trim()) {
-  //       try {
-  //           const response = await fetch("http://localhost:3001/api/movies/movies");
-  //           const movies = await response.json();
+  const searchMovie = async (e) => {
+    if (e.key === "Enter" && search.trim()) {
+      const regex = new RegExp(search.trim(), "i");
 
-  //         } catch (error) {
-  //           console.error("Error finding movie:", error.message);
-  //         }
-  //   }
-  // };
+      const filteredMovies = movieData.filter((movie) =>
+        regex.test(movie.name)
+      );
+
+      if (filteredMovies.length === 0) {
+        window.location.href = "/no-results";
+      } else {
+        console.log("Movie Found!", filteredMovies);
+      }
+    }
+  };
 
   return (
     <div className="flex w-full bg-black h-[65px]">
