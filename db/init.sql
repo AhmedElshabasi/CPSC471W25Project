@@ -17,7 +17,7 @@ Phone_number					VARCHAR(15),
 PRIMARY KEY (Company_name));
 
 CREATE TABLE THEATRE(
-Location						VARCHAR(30)				NOT NULL,
+Location						VARCHAR(255)				NOT NULL,
 Phone_number					VARCHAR(15)				NOT NULL,
 Company_name					CHAR(30)				NOT NULL,
 PRIMARY KEY (Location),					
@@ -148,8 +148,9 @@ PRIMARY KEY (Comment_id)
 );
 
 
-CREATE TABLE MOVIE(
-Name						VARCHAR(255)				NOT NULL,		
+CREATE TABLE MOVIE( 
+Name						VARCHAR(255)				NOT NULL,	
+Movie_id        INT                 NOT NULL,	
 Genre						VARCHAR(15)				NOT NULL,		
 PG_rating					VARCHAR(30)				NOT NULL,		
 Release_date				DATE					NOT NULL,
