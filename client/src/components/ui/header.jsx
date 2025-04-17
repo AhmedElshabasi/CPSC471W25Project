@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { Link } from "react-router-dom";
 import { Input } from "./input";
 import { Button } from "./button";
@@ -7,6 +8,8 @@ import { Film } from "lucide-react";
 function Header() {
   const [search, setSearch] = useState("");
   const [movieData, setMovieData] = useState([]);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMovies = async () => {
@@ -41,7 +44,7 @@ function Header() {
       if (filteredMovies.length === 0) {
         window.location.href = "/no-results";
       } else {
-        console.log("Movie Found!", filteredMovies);
+        navigate(`/movie-search/${search.trim()}`);
       }
     }
   };

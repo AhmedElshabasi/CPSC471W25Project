@@ -8,8 +8,8 @@ import TicketPage from "./components/TicketPage";
 import { useState } from "react";
 import "./App.css";
 import Header from "/src/components/ui/header";
-import NoResultsPage from "./components/ui/NoResultsPage";
-import MovieSearchPage from "./components/ui/MovieSearchPage";
+import NoResultsPage from "./components/NoResultsPage";
+import MovieSearchPage from "./components/MovieSearchPage";
 
 function App() {
   return (
@@ -26,7 +26,7 @@ function App() {
             <Route path="/no-results" element={<NoResultsPage />} />
             <Route path="/movie-search/:id" element={<MovieSearchPage />} />
             <Route path="/movie/:id" element={<TicketPage />} />
-        </Routes>
+          </Routes>
         </Router>
       </div>
     </>
