@@ -1,20 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Pencil, Ticket, User } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../../AuthContext"
 
 const UsersPage = () => {
+  const { user, token, isLoggedIn, logout } = useAuth();
   const [username, setUsername] = useState("");
   const [firstname, setFirstname] = useState("");
   const [lastname, setLastname] = useState("");
   const [email, setEmail] = useState("");
   const [phonenum, setPhonenum] = useState("");
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch("http://localhost:3001/api/users/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+  
+        const data = await response.json();
+  
+        if (response.ok) {
+          setUsername(data.username || "");
+          setFirstname(data.firstname || "");
+          setLastname(data.lastname || "");
+          setEmail(data.email || "");
+          setPhonenum(data.phonenum || "");
+        } else {
+          console.error("Error fetching user profile:", data.error);
+        }
+      } catch (err) {
+        console.error("Failed to load profile:", err);
+      }
+    };
+  
+    if (token) {
+      fetchProfile();
+    }
+  }, [token]);
+  
 
   const handleUpdateProfile = async () => {
     try {
@@ -56,8 +88,8 @@ const UsersPage = () => {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify({ username }),
       });
   
       if (!response.ok) {
@@ -67,12 +99,13 @@ const UsersPage = () => {
       }
   
       alert("Account deleted successfully!");
-      window.location.href = "/"; 
+      logout(); // clear token from context/localStorage
+      navigate("/");
     } catch (error) {
       console.error("Delete failed:", error);
       alert("An error occurred while deleting your account.");
     }
-  };
+  };  
 
 
 

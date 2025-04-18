@@ -10,6 +10,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState("");
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -35,8 +36,12 @@ const LoginPage = () => {
 
       if (data.token) {
         localStorage.setItem("token", data.token);
-        alert("Logged in successfully!");
-        window.location.href = "/users";
+        setLoginSuccess(true);
+      
+        // Redirect after short delay
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 2000);
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -47,8 +52,15 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen p-6 max-w-5xl mx-auto">
       <Card>
-        <CardHeader>
-          <CardTitle>Login</CardTitle>
+        <CardHeader className="space-y-2">
+          {loginSuccess && (
+            <div className="flex justify-center">
+              <div className="px-4 py-2 bg-white text-black text-base font-medium rounded shadow-md">
+                Logged in successfully! Welcome back, {username}
+              </div>
+            </div>
+          )}
+          <CardTitle className="text-left">Login</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Username */}

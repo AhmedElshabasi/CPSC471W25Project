@@ -15,6 +15,7 @@ const SignUpPage = () => {
   const [lastname, setLastname] = useState("");
   const [formError, setFormError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   const handleCreateAccount = async () => {
     if (!username || !password || !firstname || !lastname || !phonenum || !email) {
@@ -51,9 +52,12 @@ const SignUpPage = () => {
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
-  
-      alert("Account created and logged in!");
-      window.location.href = "/users";
+      setSignupSuccess(true);
+    
+      // Redirect after short delay
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
     } catch (error) {
       console.error("Error creating account:", error);
       setFormError("An unexpected error occurred. Please try again.");
@@ -64,9 +68,16 @@ const SignUpPage = () => {
     return (
         <div className="min-h-screen p-6 max-w-5xl mx-auto">
             <Card>
-            <CardHeader>
-              <CardTitle>Sign up</CardTitle>
-            </CardHeader>
+              <CardHeader className="space-y-2">
+                      {signupSuccess && (
+                        <div className="flex justify-center">
+                          <div className="px-4 py-2 bg-white text-black text-base font-medium rounded shadow-md">
+                          Account created and logged in! Welcome {username}
+                          </div>
+                        </div>
+                      )}
+                      <CardTitle className="text-left">Login</CardTitle>
+                    </CardHeader>
             <CardContent className="space-y-4">
               {/* Username */}
               <div>

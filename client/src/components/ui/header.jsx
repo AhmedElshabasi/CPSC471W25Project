@@ -4,8 +4,10 @@ import { Link } from "react-router-dom";
 import { Input } from "./input";
 import { Button } from "./button";
 import { Film } from "lucide-react";
+import { useAuth } from "../../AuthContext"; 
 
 function Header() {
+  const { user, isLoggedIn, logout } = useAuth();
   const [search, setSearch] = useState("");
   const [movieData, setMovieData] = useState([]);
 
@@ -66,12 +68,27 @@ function Header() {
         ></Input>
       </div>
       <div className="flex w-full h-full justify-end items-center gap-4 mr-10">
-        <Link to="/signup">
-          <Button className="h-[60%]">Sign Up</Button>
-        </Link>
-        <Link to="/login">
-          <Button className="h-[60%]">Login</Button>
-        </Link>
+        {!isLoggedIn ? (
+          <>
+            <Link to="/signup">
+              <Button className="h-[60%]">Sign Up</Button>
+            </Link>
+            <Link to="/login">
+              <Button className="h-[60%]">Login</Button>
+            </Link>
+          </>
+        ) : (
+          <div className="flex items-center gap-3">
+            <Link to="/users">
+              <div className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center font-bold text-lg">
+                {user?.username?.charAt(0).toUpperCase()}
+              </div>
+            </Link>
+            <Link to="/">
+              <Button variant="outline" onClick={logout} className="h-[60%]">Logout</Button>
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
