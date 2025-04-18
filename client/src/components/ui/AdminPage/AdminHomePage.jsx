@@ -18,52 +18,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
 
 
-const invoices = [
-  {
-    invoice: "INV001",
-    paymentStatus: "Paid",
-    totalAmount: "$250.00",
-    paymentMethod: "Credit Card",
-  },
-  {
-    invoice: "INV002",
-    paymentStatus: "Pending",
-    totalAmount: "$150.00",
-    paymentMethod: "PayPal",
-  },
-  {
-    invoice: "INV003",
-    paymentStatus: "Unpaid",
-    totalAmount: "$350.00",
-    paymentMethod: "Bank Transfer",
-  },
-  {
-    invoice: "INV004",
-    paymentStatus: "Paid",
-    totalAmount: "$450.00",
-    paymentMethod: "Credit Card",
-  },
-  {
-    invoice: "INV005",
-    paymentStatus: "Paid",
-    totalAmount: "$550.00",
-    paymentMethod: "PayPal",
-  },
-  {
-    invoice: "INV006",
-    paymentStatus: "Pending",
-    totalAmount: "$200.00",
-    paymentMethod: "Bank Transfer",
-  },
-  {
-    invoice: "INV007",
-    paymentStatus: "Unpaid",
-    totalAmount: "$300.00",
-    paymentMethod: "Credit Card",
-  },
-]
 
 const AdminHomePage = () => {
 
@@ -197,8 +162,92 @@ const AdminHomePage = () => {
         <CardDescription></CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
-        {/* <p className="text-lg font-semibold">Dashboard Insights</p> */}
-        <p className="text-lg font-semibold">Current Theatres</p>
+        <p className="text-2xl font-semibold">Dashboard</p>
+        <Tabs defaultValue="overview" className="w-full h-full">
+          <TabsList className="h-[40px] mb-5 text-sm">
+            <TabsTrigger value="overview" className="text-sm font-normal rounded-md">Overview</TabsTrigger>
+            <TabsTrigger value="Add" className="text-sm font-normal rounded-md">Add</TabsTrigger>
+            <TabsTrigger value="Delete" className="text-sm font-normal rounded-md" >Delete</TabsTrigger>
+            <TabsTrigger value="Modify" className="text-sm font-normal rounded-md" >Modify</TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview">
+            <div className="flex gap-3 w-full mb-4">
+              <Card className="w-1/4">
+                <CardHeader>
+                  <p className="text-sm font-semibold">Total Number of Theatres</p>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-semibold">{theatres.length}</p>
+                </CardContent>
+              </Card>
+              <Card className="w-1/4">
+                <CardHeader>
+                  <p className="text-sm font-semibold">Number of Movies</p>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-semibold">{movies.length}</p>
+                </CardContent>
+              </Card>
+              <Card className="w-1/4">
+                <CardHeader>
+                  <p className="text-sm font-semibold">Total Revenue</p>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-semibold">{theatres.length}</p>
+                </CardContent>
+              </Card>
+              <Card className="w-1/4">
+                <CardHeader>
+                  <p className="text-sm font-semibold">Number of Customers</p>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-semibold">{theatres.length}</p>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="flex gap-3">
+              <Card className="w-1/2 h-[400px]">
+                <CardHeader>
+                  <p className="text-bold">Overview</p>
+                </CardHeader>
+              </Card>
+              <Card className="w-1/2">
+                <CardHeader>
+                  <p className="text-bold">Recent Movie Bookings</p>
+                </CardHeader>
+              </Card>
+            </div>
+          </TabsContent>
+          <TabsContent value="Add">
+            <p className="text-lg font-bold ">Add Theatre</p>
+            <p className="text-lg font-bold">Add Movies</p>
+            <p className="text-lg font-bold">Add Admin</p>
+            <p className="text-lg font-bold">Add Movie Actor</p>
+          </TabsContent>
+          <TabsContent value="Delete">
+            <p className="text-lg font-bold">Delete Theatre</p>
+            <p className="text-lg font-bold">Delete Movies</p>
+            <p className="text-lg font-bold">Delete Admin</p>
+            <p className="text-lg font-bold">Delete Movie Actor</p>
+          </TabsContent>
+          <TabsContent value="Modify">
+            <p className="text-lg font-bold">Modify Theatre</p>
+            <p className="text-lg font-bold">Modify Movies</p>
+            <p className="text-lg font-bold">Modify Admin</p>
+            <p className="text-lg font-bold">Modify Movie Actor</p>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+      <CardFooter>
+      </CardFooter>
+  </Card>
+  </div>
+  )
+}
+
+export default AdminHomePage
+
+{/* <p className="text-lg font-semibold">Current Theatres</p>
         {theatres.length === 0 ? (<Card className="w-full h-[200px] flex justify-center items-center">
           <CardContent className="flex justify-center items-center">
             <h1>No theatres found. Use the form below to add a new one</h1>
@@ -271,16 +320,6 @@ const AdminHomePage = () => {
             </TableRow>
           </TableFooter>
         </Table>
-        )}
-      </CardContent>
-      <CardFooter>
-      </CardFooter>
-  </Card>
-  </div>
-  )
-}
-
-export default AdminHomePage
-
+        )} */}
 
 

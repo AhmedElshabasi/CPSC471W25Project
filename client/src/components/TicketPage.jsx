@@ -7,6 +7,23 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+import { format } from "date-fns"
+import { Calendar as CalendarIcon } from "lucide-react"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+
 import { useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { Badge } from "./ui/badge"
@@ -24,14 +41,10 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-
 
 const TicketPage = ({movieName}) => {
+
+  const [date, setDate] = useState("")
   
   const params = useParams()
   // Use state to cache and trigger re-renders
@@ -88,10 +101,41 @@ return(
         </div>
       </CardHeader>
       <CardContent>
-        <p>Enter your location</p>
        <div className="flex w-full h-full justify-center items-center gap-5">
-          <Input type="" placeholder="Enter your location" className="h-[60%] my-[10px] w-[40%]"></Input>
-          <Button className="h-[60%] my-[10px]">Find Theatre</Button>
+       <Select>
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Theatre Company" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="light">Light</SelectItem>
+          <SelectItem value="dark">Dark</SelectItem>
+          <SelectItem value="system">System</SelectItem>
+        </SelectContent>
+      </Select>
+      <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant={"outline"}
+          className={cn(
+            "w-[280px] justify-start text-left font-normal",
+            !date && "text-muted-foreground"
+          )}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {date ? format(date, "PPP") : <span>Pick a date</span>}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0">
+        <Calendar
+          mode="single"
+          selected={date}
+          onSelect={setDate}
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
+    <Input placeholder="Location" className="w-[400px]"></Input>
+    <Button>Find Theatres</Button>
       </div>
       </CardContent>
       <CardFooter>
