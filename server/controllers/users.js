@@ -10,10 +10,54 @@ const userRouter = express.Router();
 
 // Create a new user
 userRouter.post("/", async (req, res, next) => {
-  const { username, firstname, lastname, email, password, phonenum } = req.body;
+  let { username, firstname, lastname, email, password, phonenum } = req.body;
 
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRegex = /^\d{3}-?\d{3}-?\d{4}$/;
+
+  // === Required Fields ===
   if (!username || !password || !firstname || !lastname || !phonenum) {
-    return res.status(400).json({ error: "Missing required fields" });
+    return res.status(400).json({ error: "Missing required fields." });
+  }
+
+  // === Username validation ===
+  if (/\s/.test(username) || username.length > 16) {
+    return res.status(400).json({
+      error: "Username must not contain spaces and must be 16 characters or less.",
+    });
+  }
+
+  // === Password validation ===
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({
+      error:
+        "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, and one special character.",
+    });
+  }
+
+  // === Email validation ===
+  if (email && !emailRegex.test(email)) {
+    return res.status(400).json({ error: "Invalid email format." });
+  }
+
+  // === Phone number validation ===
+  if (!phoneRegex.test(phonenum)) {
+    return res.status(400).json({
+      error: "Phone number must be in the format 1234567890 or 123-456-7890.",
+    });
+  }
+
+  // Normalize phone number to 123-456-7890
+  phonenum = phonenum.replace(/-/g, "").replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
+
+  // === First and last name length ===
+  if (firstname.length > 16) {
+    return res.status(400).json({ error: "First name must be 16 characters or less." });
+  }
+
+  if (lastname.length > 16) {
+    return res.status(400).json({ error: "Last name must be 16 characters or less." });
   }
 
   try {
@@ -23,12 +67,11 @@ userRouter.post("/", async (req, res, next) => {
       `INSERT INTO CUSTOMER (First_name, Last_name, Email_address, Username, Phone_number, Password) 
        VALUES ($1, $2, $3, $4, $5, $6) 
        RETURNING Username, First_name, Last_name, Email_address, Phone_number`,
-      [firstname, lastname, email, username, phonenum, hashedPassword]
+      [firstname.trim(), lastname.trim(), email.trim(), username.trim(), phonenum, hashedPassword]
     );
 
     const user = result.rows[0];
 
-    // Sign a JWT
     const token = jwt.sign({ username: user.username }, JWT_SECRET, {
       expiresIn: "7d",
     });
@@ -36,9 +79,17 @@ userRouter.post("/", async (req, res, next) => {
     res.status(201).json({ user, token });
   } catch (error) {
     if (error.code === "23505") {
-      res.status(409).json({ error: "Username already exists" });
+      const constraint = error.constraint || "";
+      if (constraint.includes("username")) {
+        return res.status(409).json({ error: "Username already exists." });
+      } else if (constraint.includes("phone")) {
+        return res.status(409).json({ error: "Phone number already in use." });
+      } else {
+        return res.status(409).json({ error: "Duplicate value detected." });
+      }
     } else {
-      next(error);
+      console.error("Signup error:", error);
+      return next(error);
     }
   }
 });
