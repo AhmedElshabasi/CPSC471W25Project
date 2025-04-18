@@ -40,7 +40,7 @@ const LoginPage = () => {
       
         // Redirect after short delay
         setTimeout(() => {
-          window.location.href = "/";
+          window.location.href = "/users";
         }, 2000);
       }
     } catch (error) {
