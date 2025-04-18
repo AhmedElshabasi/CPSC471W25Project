@@ -72,36 +72,35 @@ const Home = () => {
       console.error("Error fetching Movies:", error.message);
     }
   }
-  // Run Fetch movies to execute logic
-  fetchMovies()
-  
-}, [])
+    // Run Fetch movies to execute logic
+    fetchMovies()
+    
+  }, [])
 // Used effect for fetching movie images
-useEffect(() => {
-  const fetchImages = async () => {
-    try{
-      const movieImages = {}
+  useEffect(() => {
+    const fetchImages = async () => {
+      try{
+        const movieImages = {}
 
-      // Fetch all the movie images using the MovieId
-      await Promise.all(
-        movieData.map(async (movie) => {
-          const movieURL = await retrieveMovieImage(movie.movie_id)
-          movieImages[movie.movie_id] = movieURL
-        })
-      )
-        // Set the state variable to the movie image url array
-        setMovieImages(movieImages)
+        // Fetch all the movie images using the MovieId
+        await Promise.all(
+          movieData.map(async (movie) => {
+            const movieURL = await retrieveMovieImage(movie.movie_id)
+            movieImages[movie.movie_id] = movieURL
+          })
+        )
+          // Set the state variable to the movie image url array
+          setMovieImages(movieImages)
+      }
+      catch(error){
+        console.error("Error fetching Movies:", error.message);
+      }
     }
-    catch(error){
-      console.error("Error fetching Movies:", error.message);
-    }
-  }
-    fetchImages()
-  
-  
+      fetchImages()
+    
+    
 }, [movieData])
  
-  console.log(movieData.length)
 
   return (
     <>

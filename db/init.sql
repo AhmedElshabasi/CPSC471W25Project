@@ -134,7 +134,7 @@ Permissions		            permission_enum	                                NOT NUL
 Username					VARCHAR(30)                                     NOT NULL,				
 Phone_number				VARCHAR(15)				                        NOT NULL,
 Password					VARCHAR(255)				                    NOT NULL,
-PRIMARY KEY (Admin_id)				
+PRIMARY KEY (Admin_Id)				
 );
 
 

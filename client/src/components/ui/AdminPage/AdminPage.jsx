@@ -4,15 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const AdminPage = () => {
+const AdminPage = ({children}) => {
   const [username, setUsername] = useState("");
   const [phonenum, setPhonenum] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState("");
+  const navigate = useNavigate()
 
   const handleLogin = async () => {
+
     if (!username || !password || !phonenum) {
       setFormError("Please fill out all fields.");
       return;
@@ -35,9 +38,9 @@ const AdminPage = () => {
         setFormError(data.error || "Login failed.");
         return;
       }
-
       localStorage.setItem("token", data.token);
-      window.location.href = "/";
+      localStorage.setItem("admin", data.admin.admin_id)
+      navigate(`/admin/home/${data.admin.admin_id}`)
     } catch (error) {
       console.error("Login error:", error);
       setFormError("An unexpected error occurred. Please try again.");

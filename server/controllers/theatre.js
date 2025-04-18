@@ -17,4 +17,16 @@ theatreRouter.get("/", async (req, res) => {
   }
 });
 
+
+theatreRouter.get("/details", async (req, res) => {
+
+  try {
+    const response = await client.query(`SELECT * FROM THEATRE`)
+    res.json(response)
+    
+  } catch (error) {
+    res.status(500).json({ error: "No such theatres found." });
+  }
+});
+
 export default theatreRouter;
