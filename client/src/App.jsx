@@ -10,23 +10,28 @@ import "./App.css";
 import Header from "/src/components/ui/header";
 import NoResultsPage from "./components/NoResultsPage";
 import MovieSearchPage from "./components/MovieSearchPage";
+import { AuthProvider } from "./AuthContext";
+import ChangePasswordPage from "./components/ChangePassword";
 
 function App() {
   return (
     <>
       <div className="dark bg-black text-foreground min-h-screen">
         <Router>
-          <Header></Header>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/users" element={<UsersPage />} />
-            <Route path="/signUp" element={<SignUpPage />} />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/no-results" element={<NoResultsPage />} />
-            <Route path="/movie-search/:id" element={<MovieSearchPage />} />
-            <Route path="/movie/:id" element={<TicketPage />} />
-          </Routes>
+          <AuthProvider>
+            <Header></Header>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/users" element={<UsersPage />} />
+              <Route path="/signUp" element={<SignUpPage />} />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/no-results" element={<NoResultsPage />} />
+              <Route path="/movie-search/:id" element={<MovieSearchPage />} />
+              <Route path="/movie/:id" element={<TicketPage />} />
+              <Route path="/users/change-password" element={<ChangePasswordPage/>}/>
+            </Routes>
+          </AuthProvider>
         </Router>
       </div>
     </>
