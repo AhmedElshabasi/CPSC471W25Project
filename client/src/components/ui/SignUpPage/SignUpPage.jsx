@@ -15,14 +15,58 @@ const SignUpPage = () => {
   const [lastname, setLastname] = useState("");
   const [formError, setFormError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   const handleCreateAccount = async () => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^\d{3}-?\d{3}-?\d{4}$/;
+  
+    // === Basic Required Check ===
     if (!username || !password || !firstname || !lastname || !phonenum || !email) {
       setFormError("Please fill out all required fields.");
       return;
     }
   
-    setFormError(""); // Reset error
+    // === Username ===
+    if (/\s/.test(username) || username.length > 16) {
+      setFormError("Username must not contain spaces and be 16 characters or less.");
+      return;
+    }
+  
+    // === Password ===
+    if (!passwordRegex.test(password)) {
+      setFormError(
+        "Password must be at least 8 characters long and include one uppercase, one lowercase, and one special character."
+      );
+      return;
+    }
+  
+    // === Email ===
+    if (!emailRegex.test(email)) {
+      setFormError("Please enter a valid email address.");
+      return;
+    }
+  
+    // === Phone ===
+    if (!phoneRegex.test(phonenum)) {
+      setFormError("Phone must be in the format 1234567890 or 123-456-7890.");
+      return;
+    }
+  
+    // === First/Last Name Length ===
+    if (firstname.length > 16) {
+      setFormError("First name must be 16 characters or less.");
+      return;
+    }
+  
+    if (lastname.length > 16) {
+      setFormError("Last name must be 16 characters or less.");
+      return;
+    }
+  
+    // Clear error before API call
+    setFormError("");
   
     try {
       const response = await fetch("http://localhost:3001/api/users", {
@@ -47,26 +91,34 @@ const SignUpPage = () => {
         return;
       }
   
-      // Save token to localStorage
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
   
-      alert("Account created and logged in!");
-      window.location.href = "/users";
+      setSignupSuccess(true);
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
     } catch (error) {
       console.error("Error creating account:", error);
       setFormError("An unexpected error occurred. Please try again.");
     }
-  };
+  };  
    
 
     return (
         <div className="min-h-screen p-6 max-w-5xl mx-auto">
             <Card>
-            <CardHeader>
-              <CardTitle>Sign up</CardTitle>
-            </CardHeader>
+              <CardHeader className="space-y-2">
+                      {signupSuccess && (
+                        <div className="flex justify-center">
+                          <div className="px-4 py-2 bg-white text-black text-base font-medium rounded shadow-md">
+                          Account created and logged in! Welcome {username}
+                          </div>
+                        </div>
+                      )}
+                      <CardTitle className="text-left">Sign Up</CardTitle>
+                    </CardHeader>
             <CardContent className="space-y-4">
               {/* Username */}
               <div>
@@ -133,7 +185,9 @@ const SignUpPage = () => {
                 value={phonenum}
                 onChange={(e) => setPhonenum(e.target.value)} />
               </div>
-
+              {formError && (
+                <p className="text-red-500 text-sm">{formError}</p>
+              )}
               {/* Buttons */}
               <div className="flex items-center gap-4">
                 <Button onClick={handleCreateAccount}>

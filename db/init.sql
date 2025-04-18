@@ -76,11 +76,11 @@ PRIMARY KEY (Payment_id)
 
 CREATE TABLE CUSTOMER(
 Customer_id					    BIGSERIAL,
-First_name					    CHAR(30)			NOT NULL,
-Last_name						CHAR(30)			NOT NULL,
+First_name					    VARCHAR(30)			NOT NULL,
+Last_name						VARCHAR(30)			NOT NULL,
 Email_address					VARCHAR(255)		NOT NULL,
 Username						VARCHAR(30)			NOT NULL UNIQUE,
-Phone_number					VARCHAR(15)			NOT NULL,
+Phone_number					VARCHAR(15)			NOT NULL UNIQUE,
 Password						VARCHAR(255)		NOT NULL,
 Ticket_id						INT 				        ,
 PRIMARY KEY (Customer_id)
