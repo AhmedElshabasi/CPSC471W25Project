@@ -11,6 +11,7 @@ import Header from "/src/components/ui/header";
 import NoResultsPage from "./components/NoResultsPage";
 import MovieSearchPage from "./components/MovieSearchPage";
 import { AuthProvider } from "./AuthContext";
+import ChangePasswordPage from "./components/ChangePassword";
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
               <Route path="/no-results" element={<NoResultsPage />} />
               <Route path="/movie-search/:id" element={<MovieSearchPage />} />
               <Route path="/movie/:id" element={<TicketPage />} />
+              <Route path="/users/change-password" element={<ChangePasswordPage/>}/>
             </Routes>
           </AuthProvider>
         </Router>

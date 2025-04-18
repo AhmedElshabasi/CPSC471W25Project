@@ -147,6 +147,48 @@ userRouter.get("/profile", authenticateToken, async (req, res) => {
   }
 });
 
+userRouter.post("/change-password", authenticateToken, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const username = req.user.username;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "Both current and new password are required" });
+  }
+
+  try {
+    // Get the current hashed password from the DB
+    const result = await client.query(
+      `SELECT Password FROM CUSTOMER WHERE Username = $1`,
+      [username]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const storedHashedPassword = result.rows[0].password;
+
+    // Check if the currentPassword matches the hashed one
+    const match = await bcrypt.compare(currentPassword, storedHashedPassword);
+    if (!match) {
+      return res.status(401).json({ error: "Current password is incorrect" });
+    }
+
+    // Hash the new password
+    const newHashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update the password in the DB
+    await client.query(
+      `UPDATE CUSTOMER SET Password = $1 WHERE Username = $2`,
+      [newHashedPassword, username]
+    );
+
+    res.json({ message: "Password changed successfully" });
+  } catch (err) {
+    console.error("Error changing password:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 

@@ -76,7 +76,7 @@ const SignUpPage = () => {
                           </div>
                         </div>
                       )}
-                      <CardTitle className="text-left">Login</CardTitle>
+                      <CardTitle className="text-left">Sign Up</CardTitle>
                     </CardHeader>
             <CardContent className="space-y-4">
               {/* Username */}

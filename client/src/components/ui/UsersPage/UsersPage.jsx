@@ -8,6 +8,18 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Pencil, Ticket, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../../AuthContext"
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+
 
 const UsersPage = () => {
   const { user, token, isLoggedIn, logout } = useAuth();
@@ -16,6 +28,7 @@ const UsersPage = () => {
   const [lastname, setLastname] = useState("");
   const [email, setEmail] = useState("");
   const [phonenum, setPhonenum] = useState("");
+  const [updateSuccess, setUpdateSuccess] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -69,21 +82,16 @@ const UsersPage = () => {
         alert(`Error: ${errorData.error}`);
         return;
       }
-  
-      alert("Profile updated successfully!");
+      setUpdateSuccess(true);
+
     } catch (error) {
       console.error("Update failed:", error);
-      alert("An error occurred while updating your profile.");
     }
   };
   
 
   const handleDeleteAccount = async () => {
-    const confirmed = window.confirm("Are you sure you want to delete your account? This action is irreversible.");
-  
-    if (!confirmed) return;
-  
-    try {
+      try {
       const response = await fetch("http://localhost:3001/api/users", {
         method: "DELETE",
         headers: {
@@ -97,15 +105,23 @@ const UsersPage = () => {
         alert(`Error: ${errorData.error}`);
         return;
       }
-  
-      alert("Account deleted successfully!");
       logout(); // clear token from context/localStorage
-      navigate("/");
+      window.location.href = "/";
     } catch (error) {
       console.error("Delete failed:", error);
       alert("An error occurred while deleting your account.");
     }
   };  
+
+  useEffect(() => {
+    if (updateSuccess) {
+      const timer = setTimeout(() => {
+        setUpdateSuccess(false);
+      }, 3000); // 3 seconds
+  
+      return () => clearTimeout(timer); // cleanup on unmount
+    }
+  }, [updateSuccess]);
 
 
 
@@ -150,8 +166,15 @@ const UsersPage = () => {
 
         <TabsContent value="profile">
           <Card>
-            <CardHeader>
-              <CardTitle>Edit Profile</CardTitle>
+            <CardHeader className="space-y-2">
+              {updateSuccess && (
+                <div className="flex justify-center transition-opacity duration-500 ease-in-out opacity-100">
+                  <div className="px-4 py-2 bg-white text-black text-base font-medium rounded shadow-md">
+                    Profile details modified successfully!
+                  </div>
+                </div>
+              )}
+              <CardTitle className="text-left">Edit Profile</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Username */}
@@ -187,14 +210,33 @@ const UsersPage = () => {
               {/* Buttons */}
               <div className="flex items-center gap-4">
                 <Button onClick={handleUpdateProfile}>Save Changes</Button>
-                <Link to="/change-password">
+                <Link to="/users/change-password">
                   <Button variant="outline">Change Password</Button>
                 </Link>
               </div>
               <div className="flex items-center gap-4">
-                 <Button variant="destructive" onClick={handleDeleteAccount}>
-                    Delete Account
-                 </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive">Delete Account</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. Your account will be permanently deleted.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-red-600 hover:bg-red-700"
+                        onClick={handleDeleteAccount}
+                      >
+                        Yes, delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </CardContent>
           </Card>
