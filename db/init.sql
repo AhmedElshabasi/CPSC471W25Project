@@ -87,7 +87,7 @@ PRIMARY KEY (Customer_id)
 );
 
 CREATE TABLE REGULAR(
-Ticket_id						INT					    NOT NULL,
+Ticket_id						BIGSERIAL			    NOT NULL,
 Purchase_date					DATE					NOT NULL,
 Recliner_seat					BOOLEAN					NOT NULL,
 Price						    INT					    NOT NULL,
@@ -107,7 +107,7 @@ FOREIGN KEY (Customer_id) REFERENCES CUSTOMER(Customer_id)
 );
 
 CREATE TABLE PREMIUM(
-Ticket_id						INT 					            NOT NULL,
+Ticket_id						BIGSERIAL 					        NOT NULL,
 Price						    INT					                NOT NULL,
 Movie_time					    TIME,					
 Purchase_date					DATE					            NOT NULL,
