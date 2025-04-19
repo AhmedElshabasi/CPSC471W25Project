@@ -1,5 +1,4 @@
 import express from "express";
-import dotenv from "dotenv";
 import client from "../index.js"
 
 const theatreRouter = express.Router();
@@ -16,7 +15,6 @@ theatreRouter.get("/", async (req, res) => {
     res.status(500).json({ error: "No such theatres found." });
   }
 });
-
 
 theatreRouter.get("/details", async (req, res) => {
 
