@@ -5,9 +5,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { useParams } from "react-router-dom"
-import { useEffect, useState } from "react"
+} from "@/components/ui/card";
+import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -17,94 +17,79 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
-
-
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const AdminHomePage = () => {
-
-  const params = useParams()
-  const [adminDetails, setAdminDetails] = useState([])
-  const [theatres, setTheatres] = useState([])
-  const [movies, setMovies] = useState([])
-
+  const params = useParams();
+  const [adminDetails, setAdminDetails] = useState([]);
+  const [theatres, setTheatres] = useState([]);
+  const [movies, setMovies] = useState([]);
 
   const retrieveDetails = async (adminId) => {
-
     try {
       const response = await fetch(
-        `http://localhost:3001/api/admin/details?adminId=${adminId}`, 
+        `http://localhost:3001/api/admin/details?adminId=${adminId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" }
-        });
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        console.log("Retrieving Details Failed")
+        console.log("Retrieving Details Failed");
         return;
       }
 
-      return data
-  
+      return data;
     } catch (error) {
       console.error("Details error:", error);
     }
   };
 
   const retrieveTheatres = async (adminId) => {
-
     try {
       const response = await fetch(
-        `http://localhost:3001/api/theatre/details`, 
+        `http://localhost:3001/api/theatre/details`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" }
-        });
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        console.log("Retrieving Theatres Failed")
+        console.log("Retrieving Theatres Failed");
         return;
       }
 
-      return data
-  
+      return data;
     } catch (error) {
       console.error("Details error:", error);
     }
   };
 
   const retrieveMovies = async () => {
-
     try {
-      const response = await fetch(
-        `http://localhost:3001/api/movies/movies`, 
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" }
-        });
+      const response = await fetch(`http://localhost:3001/api/movies/movies`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        console.log("Retrieving Movies Failed")
+        console.log("Retrieving Movies Failed");
         return;
       }
 
-      return data
-  
+      return data;
     } catch (error) {
       console.error("Details error:", error);
     }
@@ -112,142 +97,162 @@ const AdminHomePage = () => {
 
   useEffect(() => {
     const fetchDetails = async () => {
-    try{
-      const data = await retrieveDetails(params.id)
-      setAdminDetails(data.rows[0])
-    }
-    catch(error){
-      console.error("Error fetching Details:", error.message);
-    }
-  }
-    fetchDetails()
-    
-  }, [])
+      try {
+        const data = await retrieveDetails(params.id);
+        setAdminDetails(data.rows[0]);
+      } catch (error) {
+        console.error("Error fetching Details:", error.message);
+      }
+    };
+    fetchDetails();
+  }, []);
 
   useEffect(() => {
     const fetchTheatres = async () => {
-      try{
-        const data = await retrieveTheatres()
-        setTheatres(data.rows) 
-      }  
-      catch(error){
+      try {
+        const data = await retrieveTheatres();
+        setTheatres(data.rows);
+      } catch (error) {
         console.error("Error fetching Theatres:", error.message);
       }
-    }
-      fetchTheatres()
-    }, [adminDetails])
+    };
+    fetchTheatres();
+  }, [adminDetails]);
 
-    useEffect(() => {
-      const fetchMovies = async () => {
-        try{
-          const data = await retrieveMovies()
-          setMovies(data.rows) 
-        }  
-        catch(error){
-          console.error("Error fetching Movies:", error.message);
-        }
+  useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        const data = await retrieveMovies();
+        setMovies(data.rows);
+      } catch (error) {
+        console.error("Error fetching Movies:", error.message);
       }
-        fetchMovies()
-      }, [adminDetails])
+    };
+    fetchMovies();
+  }, [adminDetails]);
 
-  
-  return(
+  return (
     <div className="w-full h-mvh flex justify-center items-center py-[20pt]">
-    <Card className="w-[85%] h-full">
-      <CardHeader className="flex gap-1">
-        <CardTitle>
-          <p className="text-3xl">{`Welcome, ${adminDetails.username}`}</p>
-        </CardTitle>
-        <CardDescription>Below you will find all the current data within the system, and modification tools.</CardDescription>
-        <CardDescription></CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        <p className="text-2xl font-semibold">Dashboard</p>
-        <Tabs defaultValue="overview" className="w-full h-full">
-          <TabsList className="h-[40px] mb-5 text-sm">
-            <TabsTrigger value="overview" className="text-sm font-normal rounded-md">Overview</TabsTrigger>
-            <TabsTrigger value="Add" className="text-sm font-normal rounded-md">Add</TabsTrigger>
-            <TabsTrigger value="Delete" className="text-sm font-normal rounded-md" >Delete</TabsTrigger>
-            <TabsTrigger value="Modify" className="text-sm font-normal rounded-md" >Modify</TabsTrigger>
-          </TabsList>
-          <TabsContent value="overview">
-            <div className="flex gap-3 w-full mb-4">
-              <Card className="w-1/4">
-                <CardHeader>
-                  <p className="text-sm font-semibold">Total Number of Theatres</p>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-semibold">{theatres.length}</p>
-                </CardContent>
-              </Card>
-              <Card className="w-1/4">
-                <CardHeader>
-                  <p className="text-sm font-semibold">Number of Movies</p>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-semibold">{movies.length}</p>
-                </CardContent>
-              </Card>
-              <Card className="w-1/4">
-                <CardHeader>
-                  <p className="text-sm font-semibold">Total Revenue</p>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-semibold">{theatres.length}</p>
-                </CardContent>
-              </Card>
-              <Card className="w-1/4">
-                <CardHeader>
-                  <p className="text-sm font-semibold">Number of Customers</p>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-semibold">{theatres.length}</p>
-                </CardContent>
-              </Card>
-            </div>
-            <div className="flex gap-3">
-              <Card className="w-1/2 h-[400px]">
-                <CardHeader>
-                  <p className="text-bold">Overview</p>
-                </CardHeader>
-              </Card>
-              <Card className="w-1/2">
-                <CardHeader>
-                  <p className="text-bold">Recent Movie Bookings</p>
-                </CardHeader>
-              </Card>
-            </div>
-          </TabsContent>
-          <TabsContent value="Add">
-            <p className="text-lg font-bold ">Add Theatre</p>
-            <p className="text-lg font-bold">Add Movies</p>
-            <p className="text-lg font-bold">Add Admin</p>
-            <p className="text-lg font-bold">Add Movie Actor</p>
-          </TabsContent>
-          <TabsContent value="Delete">
-            <p className="text-lg font-bold">Delete Theatre</p>
-            <p className="text-lg font-bold">Delete Movies</p>
-            <p className="text-lg font-bold">Delete Admin</p>
-            <p className="text-lg font-bold">Delete Movie Actor</p>
-          </TabsContent>
-          <TabsContent value="Modify">
-            <p className="text-lg font-bold">Modify Theatre</p>
-            <p className="text-lg font-bold">Modify Movies</p>
-            <p className="text-lg font-bold">Modify Admin</p>
-            <p className="text-lg font-bold">Modify Movie Actor</p>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-      <CardFooter>
-      </CardFooter>
-  </Card>
-  </div>
-  )
-}
+      <Card className="w-[85%] h-full">
+        <CardHeader className="flex gap-1">
+          <CardTitle>
+            <p className="text-3xl">{`Welcome, ${adminDetails.username}`}</p>
+          </CardTitle>
+          <CardDescription>
+            Below you will find all the current data within the system, and
+            modification tools.
+          </CardDescription>
+          <CardDescription></CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <p className="text-2xl font-semibold">Dashboard</p>
+          <Tabs defaultValue="overview" className="w-full h-full">
+            <TabsList className="h-[40px] mb-5 text-sm">
+              <TabsTrigger
+                value="overview"
+                className="text-sm font-normal rounded-md"
+              >
+                Overview
+              </TabsTrigger>
+              <TabsTrigger
+                value="Add"
+                className="text-sm font-normal rounded-md"
+              >
+                Add
+              </TabsTrigger>
+              <TabsTrigger
+                value="Delete"
+                className="text-sm font-normal rounded-md"
+              >
+                Delete
+              </TabsTrigger>
+              <TabsTrigger
+                value="Modify"
+                className="text-sm font-normal rounded-md"
+              >
+                Modify
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="overview">
+              <div className="flex gap-3 w-full mb-4">
+                <Card className="w-1/4">
+                  <CardHeader>
+                    <p className="text-sm font-semibold">
+                      Total Number of Theatres
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-semibold">{theatres.length}</p>
+                  </CardContent>
+                </Card>
+                <Card className="w-1/4">
+                  <CardHeader>
+                    <p className="text-sm font-semibold">Number of Movies</p>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-semibold">{movies.length}</p>
+                  </CardContent>
+                </Card>
+                <Card className="w-1/4">
+                  <CardHeader>
+                    <p className="text-sm font-semibold">Total Revenue</p>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-semibold">{theatres.length}</p>
+                  </CardContent>
+                </Card>
+                <Card className="w-1/4">
+                  <CardHeader>
+                    <p className="text-sm font-semibold">Number of Customers</p>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-semibold">{theatres.length}</p>
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="flex gap-3">
+                <Card className="w-1/2 h-[400px]">
+                  <CardHeader>
+                    <p className="text-bold">Overview</p>
+                  </CardHeader>
+                </Card>
+                <Card className="w-1/2">
+                  <CardHeader>
+                    <p className="text-bold">Recent Movie Bookings</p>
+                  </CardHeader>
+                </Card>
+              </div>
+            </TabsContent>
+            <TabsContent value="Add">
+              <p className="text-lg font-bold ">Add Theatre</p>
+              <p className="text-lg font-bold">Add Movies</p>
+              <p className="text-lg font-bold">Add Admin</p>
+              <p className="text-lg font-bold">Add Movie Actor</p>
+            </TabsContent>
+            <TabsContent value="Delete">
+              <p className="text-lg font-bold">Delete Theatre</p>
+              <p className="text-lg font-bold">Delete Movies</p>
+              <p className="text-lg font-bold">Delete Admin</p>
+              <p className="text-lg font-bold">Delete Movie Actor</p>
+            </TabsContent>
+            <TabsContent value="Modify">
+              <p className="text-lg font-bold">Modify Theatre</p>
+              <p className="text-lg font-bold">Modify Movies</p>
+              <p className="text-lg font-bold">Modify Admin</p>
+              <p className="text-lg font-bold">Modify Movie Actor</p>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+        <CardFooter></CardFooter>
+      </Card>
+    </div>
+  );
+};
 
-export default AdminHomePage
+export default AdminHomePage;
 
-{/* <p className="text-lg font-semibold">Current Theatres</p>
+{
+  /* <p className="text-lg font-semibold">Current Theatres</p>
         {theatres.length === 0 ? (<Card className="w-full h-[200px] flex justify-center items-center">
           <CardContent className="flex justify-center items-center">
             <h1>No theatres found. Use the form below to add a new one</h1>
@@ -320,6 +325,5 @@ export default AdminHomePage
             </TableRow>
           </TableFooter>
         </Table>
-        )} */}
-
-
+        )} */
+}
