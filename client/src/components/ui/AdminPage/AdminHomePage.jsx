@@ -18,6 +18,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,9 +50,6 @@ const AdminHomePage = () => {
   const [pgRating, setPgRating] = useState("");
   const [releaseDate, setReleaseDate] = useState("");
   const [description, setDescription] = useState("");
-  const [duration, setDuration] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
 
   const [adminId, setAdminId] = useState("");
   const [adminUsername, setAdminUsername] = useState("");
@@ -72,6 +77,25 @@ const AdminHomePage = () => {
   const [deleteActorMovie, setDeleteActorMovie] = useState("");
 
   const [dataRefresh, setDataRefresh] = useState(false);
+
+  const genres = [
+    "Action",
+    "Adventure",
+    "Animation",
+    "Comedy",
+    "Crime",
+    "Drama",
+    "Family",
+    "Fantasy",
+    "Horror",
+    "Mystery",
+    "Science Fiction",
+    "Thriller",
+    "War",
+    "Western",
+  ];
+
+  const ratings = ["G", "PG", "PG-13", "R", "NC-17"];
 
   const retrieveDetails = async (adminId) => {
     try {
@@ -241,8 +265,19 @@ const AdminHomePage = () => {
     fetchMovies();
   }, [dataRefresh]);
 
+  const resetStatusMessages = () => {
+    setTheatreError("");
+    setTheatreSuccess("");
+    setMovieError("");
+    setMovieSuccess("");
+    setAdminError("");
+    setAdminSuccess("");
+    setActorError("");
+    setActorSuccess("");
+  };
+
   const handleAddTheatre = async () => {
-    console.log(movies);
+    resetStatusMessages();
     const phoneRegex = /^\d{3}-?\d{3}-?\d{4}$/;
 
     if (adminDetails.permissions !== "Theatre Management") {
@@ -252,7 +287,7 @@ const AdminHomePage = () => {
 
     if (!theatreLocation || !theatrePhone || !theatreCompany) {
       setTheatreSuccess("");
-      return setTheatreError("You do not have permission to add theatres.");
+      return setTheatreError("Please fill in all admin fields.");
     }
 
     if (!phoneRegex.test(theatrePhone)) {
@@ -311,14 +346,16 @@ const AdminHomePage = () => {
         }
       );
 
-      const data = await theatreRes.json();
-
       if (theatreRes.ok) {
+        setDataRefresh((prev) => !prev);
+        setTheatreLocation("");
+        setTheatreCompany("");
+        setTheatrePhone("");
         setTheatreError("");
-        setTheatreSuccess(`Theatre in "${theatreLocation}" added!`);
+        setTheatreSuccess(`Theatre in ${theatreLocation} added!`);
       } else {
         setTheatreSuccess("");
-        setTheatreError(data.error || "Failed to add theatre.");
+        setTheatreError("Theatre in this location already exists.");
       }
     } catch (error) {
       console.error("Theatre creation error:", error);
@@ -327,9 +364,90 @@ const AdminHomePage = () => {
     }
   };
 
-  const handleAddMovie = async () => {};
+  const handleAddMovie = async () => {
+    console.log(movies);
+    resetStatusMessages();
+    const movieIdRegex = /^[0-9]+$/;
+
+    if (adminDetails.permissions !== "Movie Listing Management") {
+      setMovieSuccess("");
+      return setMovieError("You do not have permission to add movies.");
+    }
+
+    if (
+      !movieName ||
+      !movieId ||
+      !genre ||
+      !pgRating ||
+      !releaseDate ||
+      !description
+    ) {
+      setMovieSuccess("");
+      return setMovieError("Please fill in all movie fields.");
+    }
+
+    if (!movieIdRegex.test(movieId)) {
+      setMovieSuccess("");
+      return setMovieError(
+        "Movie ID must be a number with no symbols or spaces."
+      );
+    }
+
+    const today = new Date();
+    const inputDate = new Date(releaseDate);
+    if (inputDate < today.setHours(0, 0, 0, 0)) {
+      setMovieSuccess("");
+      return setMovieError("Release date cannot be in the past.");
+    }
+
+    const duplicate = movies.find(
+      (m) =>
+        m.movie_id === parseInt(movieId) ||
+        m.name.trim().toLowerCase() === movieName.trim().toLowerCase()
+    );
+
+    if (duplicate) {
+      setMovieSuccess("");
+      return setMovieError("A movie with this ID or name already exists.");
+    }
+
+    try {
+      const res = await fetch("http://localhost:3001/api/movies/add/movie", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          movie_id: parseInt(movieId),
+          name: movieName.trim(),
+          genre: genre.trim(),
+          pg_rating: pgRating.trim(),
+          release_date: releaseDate,
+          description: description.trim(),
+        }),
+      });
+
+      if (res.ok) {
+        setDataRefresh((prev) => !prev);
+        setMovieName("");
+        setMovieId("");
+        setGenre("");
+        setPgRating("");
+        setReleaseDate("");
+        setDescription("");
+        setMovieError("");
+        setMovieSuccess(`Movie "${movieName}" added!`);
+      } else {
+        setMovieSuccess("");
+        setMovieError("A movie with this ID and name already exists.");
+      }
+    } catch (error) {
+      console.error("Movie creation error:", error);
+      setMovieSuccess("");
+      setMovieError("An error occurred while adding the movie.");
+    }
+  };
 
   const handleAddAdmin = async () => {
+    resetStatusMessages();
     const phoneRegex = /^\d{3}-?\d{3}-?\d{4}$/;
     const adminIdRegex = /^[0-9]+$/;
 
@@ -350,28 +468,41 @@ const AdminHomePage = () => {
       return setAdminError("Please fill in all admin fields.");
     }
 
-    if (
-      adminPermissions &&
-      adminPermissions != "Theatre Management" &&
-      adminPermissions != "Comment Management" &&
-      adminPermissions != "Movie Listing Management"
-    ) {
+    const isUsernameTaken = admins.some(
+      (admin) => admin.username === adminUsername
+    );
+    if (isUsernameTaken) {
       setAdminSuccess("");
-      return setAdminError("Not valid permission type for admin.");
+      return setAdminError("That username is already taken.");
     }
 
-    if (
-      adminRole &&
-      adminRole != "Employee" &&
-      adminRole != "Manager" &&
-      adminRole != "Supervisor"
-    ) {
+    const roleMap = {
+      manager: "Manager",
+      employee: "Employee",
+      supervisor: "Supervisor",
+    };
+
+    const permissionMap = {
+      "theatre management": "Theatre Management",
+      "comment management": "Comment Management",
+      "movie listing management": "Movie Listing Management",
+    };
+
+    const normalizedRole = adminRole.trim().toLowerCase();
+    const normalizedPermissions = adminPermissions.trim().toLowerCase();
+
+    const dbRole = roleMap[normalizedRole];
+    const dbPermissions = permissionMap[normalizedPermissions];
+
+    if (!dbRole) {
       setAdminSuccess("");
       return setAdminError("Not a valid admin role.");
     }
 
-    // Check to see if username is not taken for admin. Will require useEffect to check through all admins
-    // Also need to make sure for permissions and roles that case-sensitivity and spaces doesn't affect adding the admin.
+    if (!dbPermissions) {
+      setAdminSuccess("");
+      return setAdminError("Not a valid permission type for admin.");
+    }
 
     if (!phoneRegex.test(adminPhone)) {
       setAdminSuccess("");
@@ -394,17 +525,24 @@ const AdminHomePage = () => {
           username: adminUsername,
           password: adminPassword,
           phone: adminPhone,
-          role: adminRole,
-          permissions: adminPermissions,
+          role: dbRole,
+          permissions: dbPermissions,
         }),
       });
 
       if (res.ok) {
+        setDataRefresh((prev) => !prev);
         setAdminError("");
-        setAdminSuccess(`Successfuly added admin ${adminUsername}!`);
+        setAdminId("");
+        setAdminUsername("");
+        setAdminPassword("");
+        setAdminPhone("");
+        setAdminRole("");
+        setAdminPermissions("");
+        setAdminSuccess(`Successfuly added ${adminUsername}!`);
       } else {
         setAdminSuccess("");
-        setAdminError("Admin Already Exists.");
+        setAdminError("Admin already exists with that ID.");
       }
     } catch (error) {
       setAdminSuccess("");
@@ -416,6 +554,7 @@ const AdminHomePage = () => {
   };
 
   const handleAddMovieActor = async () => {
+    resetStatusMessages();
     if (adminDetails.permissions != "Movie Listing Management") {
       setActorSuccess("");
       return setActorError("You do not have permission to add movie actors.");
@@ -448,6 +587,7 @@ const AdminHomePage = () => {
       });
 
       if (res.ok) {
+        setDataRefresh((prev) => !prev);
         setActorError("");
         setActorSuccess(`Actor "${actorName}" added successfully.`);
       } else {
@@ -705,7 +845,7 @@ const AdminHomePage = () => {
                 )}
               </div>
               <div className="space-y-3">
-                <p className="text-lg font-bold">Add Movie</p>
+                <p className="text-lg font-bold">Add Upcoming Movie</p>
                 <div className="grid grid-cols-3 gap-4">
                   <Input
                     placeholder="Movie Name"
@@ -717,16 +857,30 @@ const AdminHomePage = () => {
                     value={movieId}
                     onChange={(e) => setMovieId(e.target.value)}
                   />
-                  <Input
-                    placeholder="Genre"
-                    value={genre}
-                    onChange={(e) => setGenre(e.target.value)}
-                  />
-                  <Input
-                    placeholder="PG Rating"
-                    value={pgRating}
-                    onChange={(e) => setPgRating(e.target.value)}
-                  />
+                  <Select onValueChange={(val) => setGenre(val)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Genre" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {genres.map((g) => (
+                        <SelectItem key={g} value={g}>
+                          {g}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select onValueChange={(val) => setPgRating(val)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select PG-Rating" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ratings.map((r) => (
+                        <SelectItem key={r} value={r}>
+                          {r}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Input
                     type="date"
                     placeholder="Release Date"
@@ -737,24 +891,6 @@ const AdminHomePage = () => {
                     placeholder="Description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                  />
-                  <Input
-                    type="time"
-                    placeholder="Duration"
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
-                  />
-                  <Input
-                    type="time"
-                    placeholder="Start Time"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                  />
-                  <Input
-                    type="time"
-                    placeholder="End Time"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
                   />
                 </div>
                 <Button onClick={handleAddMovie} className="mt-2 w-[120px]">
