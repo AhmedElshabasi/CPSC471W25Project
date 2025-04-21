@@ -47,7 +47,7 @@ FOREIGN KEY(Theatre_location, Auditorium_number) REFERENCES AUDITORIUM(Theatre_l
 );
 
 CREATE TABLE PAYMENT(
-Payment_id					INT 					    NOT NULL    UNIQUE,
+Payment_id					BIGSERIAL 					NOT NULL    UNIQUE,
 Card_number					INT 					    NOT NULL,
 Ticket_id					INT 					    NOT NULL,
 Customer_id					INT					        NOT NULL,
@@ -57,7 +57,7 @@ PRIMARY KEY (Payment_id, Card_number, Ticket_id, Customer_id)
 );
 
 CREATE TABLE PAYPAL(
-Payment_id					    INT 					    NOT NULL,
+Payment_id					    BIGSERIAL 					NOT NULL    UNIQUE,
 Email_address					VARCHAR(255)				NOT NULL,
 Password						VARCHAR(255)				NOT NULL,
 Phone_number					VARCHAR(15),
@@ -66,7 +66,7 @@ FOREIGN KEY (Payment_id) REFERENCES PAYMENT(Payment_id)
 );
 
 CREATE TABLE CARD(
-Payment_id					INT 					    NOT NULL,
+Payment_id					BIGSERIAL 					NOT NULL    UNIQUE,
 Expiration_date				DATE    				    NOT NULL,
 Card_type					card_type_enum      		NOT NULL,
 CVV						    INT 					    NOT NULL,
