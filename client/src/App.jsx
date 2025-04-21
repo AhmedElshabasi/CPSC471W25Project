@@ -13,9 +13,10 @@ import MovieSearchPage from "./components/MovieSearchPage";
 import { AuthProvider } from "./AuthContext";
 import ChangePasswordPage from "./components/ChangePassword";
 import AdminRoute from "./components/ui/AdminPage/AdminRoute";
+import Footer from "./components/ui/footer";
 import AdminHomePage from "./components/ui/AdminPage/AdminHomePage";
 import NotAuthorizedAdmin from "./components/ui/AdminPage/NotAuthorizedAdmin";
-import Footer from "./components/ui/footer";
+import BookTicketPage from "./components/BookTicketPage";
 
 function App() {
   return (
@@ -48,6 +49,10 @@ function App() {
               <Route
                 path="/users/change-password"
                 element={<ChangePasswordPage />}
+              />
+              <Route
+                path="/movie/:id/booktickets"
+                element={<BookTicketPage />}
               />
             </Routes>
             <Footer></Footer>

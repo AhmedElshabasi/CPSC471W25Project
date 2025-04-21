@@ -24,7 +24,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { Badge } from "./ui/badge"
 import { badgeVariants } from "@/components/ui/badge"
@@ -32,15 +32,9 @@ import { Input } from "./ui/input"
 import { Check, ChevronsUpDown } from "lucide-react"
  
 import { cn } from "@/lib/utils"
+import { Navigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
+
 
 const TicketPage = ({movieName}) => {
 
@@ -51,6 +45,11 @@ const TicketPage = ({movieName}) => {
   const [movieData, setMovieData] = useState({})
   const [theatreData, setTheatreData] = useState([])
   const [movieImage, setMovieImage] = useState("")
+  const [company, setCompany] = useState("")
+  const [location, setLocation] = useState("")
+  const [searchTriggered, setSearchTriggered] = useState(false)
+  const [filteredList, setFilteredList] = useState([])
+  const navigate = useNavigate()
 
   // useEffect on fetching movies
   useEffect(() => {
@@ -67,159 +66,208 @@ const TicketPage = ({movieName}) => {
   // Run Fetch movies to execute logic
   fetchMovies()
   
-}, [])
+  }, [])
 
-useEffect(() => {
-  const fetchAllTheatres = async () => {
-  try{
-    // Fetch and store movies into array state variable
-    const data = await retrieveAllTheatres()
-    setTheatreData(data)
-  }
-  catch(error){
-    console.error("Error fetching theatres:", error.message);
-  }
-}
-// Run Fetch movies to execute logic
-fetchAllTheatres()
+  useEffect(() => {
+    const fetchAllTheatres = async () => {
+      try{
+        // Fetch and store movies into array state variable
+        const data = await retrieveAllTheatres()
+        setTheatreData(data)
+      }
+      catch(error){
+        console.error("Error fetching theatres:", error.message);
+      }
+    }
+    // Run Fetch movies to execute logic
+    fetchAllTheatres()
 
-}, [movieData])
+    }, [movieData])
 
-useEffect(() => {
-  const fetchImages = async () => {
+  useEffect(() => {
+    const fetchImages = async () => {
+      try{
+        if(!movieData?.movie_id) return 
+        const movieURL = await retrieveMovieImage(movieData.movie_id)
+        setMovieImage(movieURL)
+      }
+      catch(error){
+        console.error("Error fetching Movies:", error.message);
+      }
+    }
+      fetchImages()
+    
+    
+  }, [movieData])
+
+
+  const retrieveMovie = async () => {
     try{
-      if(!movieData?.movie_id) return 
-      const movieURL = await retrieveMovieImage(movieData.movie_id)
-      setMovieImage(movieURL)
+      // Fetch movies from the database
+      const response = await fetch("http://localhost:3001/api/movies/movies")
+      const data = await response.json()
+      for(let i = 0; i < data.rows.length; i++){
+        if(data.rows[i].name === params.id){
+          return data.rows[i]
+        }
+      }
+      return "Data not found!"
     }
     catch(error){
       console.error("Error fetching Movies:", error.message);
     }
+
   }
-    fetchImages()
-  
-  
-}, [movieData])
 
-
-const retrieveMovie = async () => {
-  try{
-    // Fetch movies from the database
-    const response = await fetch("http://localhost:3001/api/movies/movies")
-    const data = await response.json()
-    for(let i = 0; i < data.rows.length; i++){
-      if(data.rows[i].name === params.id){
-        return data.rows[i]
-      }
+  const retrieveAllTheatres = async () => {
+    try{
+      // Fetch theatres from the database
+      const response = await fetch("http://localhost:3001/api/theatre/details")
+      const data = await response.json()
+      return data.rows
     }
-    return "Data not found!"
-  }
-  catch(error){
-    console.error("Error fetching Movies:", error.message);
-  }
+    catch(error){
+      console.error("Error fetching theatres:", error.message);
+    }
 
-}
-
-const retrieveAllTheatres = async () => {
-  try{
-    // Fetch theatres from the database
-    const response = await fetch("http://localhost:3001/api/theatre/details")
-    const data = await response.json()
-    return data.rows
-  }
-  catch(error){
-    console.error("Error fetching theatres:", error.message);
   }
 
-}
+  const retrieveMovieImage = async (movie_id) => {
+    try{
+      const response = await fetch(`http://localhost:3001/api/movies/movies/image?movie_id=${movie_id}`)
+      const imageLink = await response.json()
+      return imageLink;
+    }
+    catch(error){
+      console.error("Error fetching Movie Images:", error.message);
+    }
+  } 
 
-const retrieveMovieImage = async (movie_id) => {
-  try{
-    const response = await fetch(`http://localhost:3001/api/movies/movies/image?movie_id=${movie_id}`)
-    const imageLink = await response.json()
-    return imageLink;
+  const findTheatres = async () => {
+    try{
+
+      console.log(`Query: Location: ${location}, Company: ${company}`)
+      console.log(filteredList)
+      if(company.length === 0 || location.length === 0){
+
+        return setSearchTriggered(false)
+      }
+      const response = await fetch(`http://localhost:3001/api/theatre/find?location=${location}&company=${company}`)
+      const theatres = await response.json()
+      setFilteredList(theatres.rows)
+
+      return setSearchTriggered(true)
+
+    }
+    catch(error){
+      console.error("Error fetching Movie Images:", error.message);
+    }
+    
+    }
+  
+  const bookTickets = (theatre) => {
+    
+    const movieName = movieData.name
+    const token = localStorage.getItem("token")
+    const selectedDate = String(date).slice(4,15)
+    
+    if(token){
+    navigate(`/movie/${movieName}/booktickets?company=${encodeURIComponent(theatre.company_name.trim())}&location=${encodeURIComponent(theatre.location.trim())}&date=${selectedDate}`);
+    }
+    else{
+      navigate(`/login`);
+    }
+    
   }
-  catch(error){
-    console.error("Error fetching Movie Images:", error.message);
-  }
-} 
 
-
- 
-return(
-  <div className="w-full h-mvh flex justify-center items-center py-[20pt]">
-    <Card className="w-[77%] h-full">
-      <CardHeader className="flex gap-1">
-        <CardTitle>
-          <p>Book Tickets: {params.id}</p>
-        </CardTitle>
-        <div className="flex w-full h-full flex-row gap-3">
-          <Card key={movieData.movie_id} className="w-[200px] h-[300px] flex overflow-hidden rounded-lg">
-              <img src={movieImage} alt="" loading="lazy" className="w-[200px] h-[300px] object-contain rounded-lg"/>
-              <CardContent>
-            </CardContent>
-          </Card>
-          <div className="flex flex-col gap-3">
-            <CardDescription className="w-[900px]">{movieData.description}</CardDescription>
-            <div className="flex flex-row gap-3">
-              <Badge className={"w-fit"}>{movieData.genre}</Badge>
-              <Badge className={"w-fit"}>{movieData.pg_rating}</Badge>
-              <Badge variant="secondary" className={"w-fit"}>{`Release Date: ${String(movieData.release_date).slice(0,10)}`}</Badge>
-              <Badge variant="secondary" className={"w-fit"}>{`Duration: ${movieData.duration}`}</Badge>
+  return(
+    <div className="w-full h-mvh flex justify-center items-center py-[20pt]">
+      <Card className="w-[77%] h-full">
+        <CardHeader className="flex gap-1">
+          <CardTitle>
+            <p>Book Tickets: {params.id}</p>
+          </CardTitle>
+          <div className="flex w-full h-full flex-row gap-3">
+            <Card key={movieData.movie_id} className="w-[200px] h-[300px] flex overflow-hidden rounded-lg">
+                <img src={movieImage || null} alt="" loading="lazy" className="w-[200px] h-[300px] object-contain rounded-lg"/>
+                <CardContent>
+              </CardContent>
+            </Card>
+            <div className="flex flex-col gap-3">
+              <CardDescription className="w-[900px]">{movieData.description}</CardDescription>
+              <div className="flex flex-row gap-3">
+                <Badge className={"w-fit"}>{movieData.genre}</Badge>
+                <Badge className={"w-fit"}>{movieData.pg_rating}</Badge>
+                <Badge variant="secondary" className={"w-fit"}>{`Release Date: ${String(movieData.release_date).slice(0,10)}`}</Badge>
+                <Badge variant="secondary" className={"w-fit"}>{`Duration: ${movieData.duration}`}</Badge>
+              </div>
+              <CardTitle className="text-lg">User Experience</CardTitle>
+              <div className="flex gap-3">
+                <Card className="w-2/3 h-[170px]">
+                  <CardHeader>
+                  </CardHeader>
+                  <CardContent>
+                
+                  </CardContent>
+                </Card>
+                <Card className="w-1/3">
+                  <CardHeader>
+                    <CardTitle className="text-sm">Add your experience</CardTitle>
+                  </CardHeader>
+                  <CardContent></CardContent>
+                </Card>
+              </div>
             </div>
           </div>
+        </CardHeader>
+        <CardContent>
+        <div className="flex w-full h-full my-[25px] justify-center items-center gap-5">
+        <Select onValueChange={(value) => setCompany(value)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Theatre Company" />
+          </SelectTrigger>
+          <SelectContent>
+            {theatreData.map((theatre, index) => 
+              <SelectItem value={theatre.company_name} key={index}>{theatre.company_name}</SelectItem>
+            )}       
+          </SelectContent>
+        </Select>
+        <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant={"outline"}
+            className={cn(
+              "w-[280px] justify-start text-left font-normal",
+              !date && "text-muted-foreground"
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {date ? format(date, "PPP") : <span>Pick a date</span>}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+      <Input placeholder="Location" className="w-[400px]" onChange={(e) => setLocation(e.target.value)}></Input>
+      <Button onClick={() => findTheatres()}>Find Theatres</Button>
         </div>
-      </CardHeader>
-      <CardContent>
-       <div className="flex w-full h-full justify-center items-center gap-5">
-       <Select>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Theatre Company" />
-        </SelectTrigger>
-        <SelectContent>
-          {theatreData.map((theatre, index) => 
-            <SelectItem value={theatre.company_name} key={index}>{theatre.company_name}</SelectItem>
-          )}       
-        </SelectContent>
-      </Select>
-      <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant={"outline"}
-          className={cn(
-            "w-[280px] justify-start text-left font-normal",
-            !date && "text-muted-foreground"
-          )}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "PPP") : <span>Pick a date</span>}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={setDate}
-          initialFocus
-        />
-      </PopoverContent>
-    </Popover>
-    <Input placeholder="Location" className="w-[400px]"></Input>
-    <Button>Find Theatres</Button>
-      </div>
-      </CardContent>
-      <CardFooter>
-        <div className="flex flex-col gap-3 h-full w-full">
-        <p>Select Your Theatre</p>
-        {theatreData.length === 0 ? (
-          <Card className="h-full w-full">
-            <CardHeader className="flex justify-center items-center">
-              <p>No Theatres Found.</p>
-            </CardHeader>
-          </Card>
-        ) : (
-          theatreData.map((theatre, index) => (
-            <div className="flex flex-wrap gap-3">
+        </CardContent>
+        <CardFooter>
+          <div className="flex flex-col gap-3 h-full w-full">
+            <p>Select Your Theatre</p>
+            {searchTriggered ? (filteredList.length === 0 ? (<Card className="h-full w-full">
+              <CardHeader className="flex justify-center items-center">
+                <p>No Theatres Found for Input</p>
+              </CardHeader>
+            </Card>): 
+            (filteredList.map((theatre, index) => (
+              <div key={index} className="flex flex-wrap gap-3">
               <Card key={index} className="w-[200pt]">
                 <CardHeader>
                   <CardTitle className="text-lg">{theatre.company_name}</CardTitle>
@@ -227,16 +275,20 @@ return(
                   <CardDescription>{theatre.phone_number}</CardDescription>
                 </CardHeader>
                 <CardFooter className="flex justify-center items-center">
-                  <Button className="text-xs">{`Book Tickets for ${String(date).slice(0,10)}`}<ArrowRight></ArrowRight></Button>
+                  <Button className="text-xs" onClick={() => bookTickets(theatre)}>{`Book Tickets for ${String(date).slice(0,10)}`}<ArrowRight></ArrowRight></Button>
                 </CardFooter>
               </Card>
             </div>
-          ))
-        )}
-        </div>
-      </CardFooter>
-  </Card>
-</div>
-)}
+            )))): (<Card className="h-full w-full">
+              <CardHeader className="flex justify-center items-center">
+                <p>No Theatre Found</p>
+              </CardHeader>
+            </Card>)
+            }
+          </div>
+        </CardFooter>
+    </Card>
+  </div>
+  )}
 
 export default TicketPage
