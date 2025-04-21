@@ -13,6 +13,7 @@ import MovieSearchPage from "./components/MovieSearchPage";
 import { AuthProvider } from "./AuthContext";
 import ChangePasswordPage from "./components/ChangePassword";
 import AddCard from "./components/AddCard";
+import AddPaypal from "./components/AddPaypal";
 
 function App() {
   return (
@@ -31,7 +32,8 @@ function App() {
               <Route path="/movie-search/:id" element={<MovieSearchPage />} />
               <Route path="/movie/:id" element={<TicketPage />} />
               <Route path="/users/change-password" element={<ChangePasswordPage/>}/>
-              <Route path="/payment" element={<AddCard/>}/>
+              <Route path="/payment/add-card" element={<AddCard/>}/>
+              <Route path="/payment/add-paypal" element={<AddPaypal/>}/>
             </Routes>
           </AuthProvider>
         </Router>

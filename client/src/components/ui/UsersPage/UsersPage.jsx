@@ -19,6 +19,8 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { useNavigate } from "react-router-dom";
+import { Trash2, Plus } from "lucide-react";
 
 
 const UsersPage = () => {
@@ -29,6 +31,90 @@ const UsersPage = () => {
   const [email, setEmail] = useState("");
   const [phonenum, setPhonenum] = useState("");
   const [updateSuccess, setUpdateSuccess] = useState(false);
+
+  const [payments, setPayments] = useState([]);
+  const [combinedPayments, setCombinedPayments] = useState([]);
+  const [showAddOptions, setShowAddOptions] = useState(false);
+  const navigate = useNavigate();
+
+  const fetchPayments = async () => {
+    try {
+      const res = await fetch("http://localhost:3001/api/payment", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      const data = await res.json();
+  
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to fetch payments");
+      }
+  
+      const { payments, cards, paypals } = data;
+  
+      const merged = payments.map((payment) => {
+        const card = cards.find((c) => c.payment_id === payment.payment_id);
+        const paypal = paypals.find((p) => p.payment_id === payment.payment_id);
+      
+        if (card) {
+          return {
+            type: "card",
+            payment_id: payment.payment_id,
+            details: {
+              card_holder: card.card_holder,
+              card_type: card.card_type,
+              expiration_date: card.expiration_date,
+              last4: payment.card_number?.toString().slice(-4) || "****",
+            },
+          };
+        }
+      
+        if (paypal) {
+          return {
+            type: "paypal",
+            payment_id: payment.payment_id,
+            details: {
+              email_address: paypal.email_address,
+              phone_number: paypal.phone_number,
+            },
+          };
+        }
+      
+        return null; // fallback in case data mismatch
+      }).filter(Boolean); // remove any nulls      
+  
+      setCombinedPayments(merged);
+    } catch (err) {
+      console.error("Fetch payment error:", err);
+    }
+  };
+  
+  
+  useEffect(() => {
+    if (token) fetchPayments();
+  }, [token]);  
+
+  const handleDeletePayment = async (paymentId) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/payment/${paymentId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (response.ok) {
+        fetchPayments();
+      } else {
+        const data = await response.json();
+        alert(data.error || "Failed to delete payment.");
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("An error occurred while deleting the payment.");
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -238,6 +324,95 @@ const UsersPage = () => {
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
+            </CardContent>
+          </Card>
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Payment Methods</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {combinedPayments.length === 0 ? (
+                <div className="flex flex-col items-center">
+                  {!showAddOptions ? (
+                    <Button variant="outline" onClick={() => setShowAddOptions(true)}>
+                      <Plus className="w-4 h-4 mr-2" /> Add Payment
+                    </Button>
+                  ) : (
+                    <div className="flex gap-4">
+                      <Button onClick={() => navigate("/payment/add-card")}>Add Card</Button>
+                      <Button onClick={() => navigate("/payment/add-paypal")}>Add PayPal</Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4">
+                    {combinedPayments.map((pay) => (
+                      <Card key={pay.payment_id} className="border p-4">
+                        <CardTitle className="text-base">
+                          {pay.type === "card" ? "Card" : "PayPal"}
+                        </CardTitle>
+
+                        <p className="text-sm mt-1">
+                          {pay.type === "card" ? (
+                            <>
+                              {pay.details.card_type} •••• {pay.details.last4}
+                              <br />
+                              {pay.details.card_holder}
+                              <br />
+                              Expires:{" "}
+                                {pay.details.expiration_date
+                                  ? new Date(pay.details.expiration_date).toLocaleDateString("en-GB")
+                                  : "N/A"}
+                            </>
+                          ) : (
+                            <>
+                              {pay.details.email_address}
+                              <br />
+                              {pay.details.phone_number || ""}
+                            </>
+                          )}
+                        </p>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" className="mt-3">
+                              <Trash2 className="w-4 h-4 mr-1" /> Delete
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Payment Method?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will remove the selected {pay.type === "card" ? "card" : "PayPal account"} from your account. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-red-600 hover:bg-red-700"
+                                onClick={() => handleDeletePayment(pay.payment_id)}
+                              >
+                                Yes, delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </Card>
+                    ))}
+                  </div>
+                  <div className="pt-4">
+                    <Button onClick={() => setShowAddOptions(!showAddOptions)} variant="outline">
+                      {showAddOptions ? "Cancel" : "Add Another Payment Method"}
+                    </Button>
+                    {showAddOptions && (
+                      <div className="flex gap-4 mt-4">
+                        <Button onClick={() => navigate("/payment/add-card")}>Add Card</Button>
+                        <Button onClick={() => navigate("/payment/add-paypal")}>Add PayPal</Button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
