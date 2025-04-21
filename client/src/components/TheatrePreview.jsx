@@ -28,7 +28,7 @@ const TheatrePreview = ({rows, onSeatSelect, onSeatDeselect, selectedSeats, tota
   const handleSeatClick = (rowIndex, section, seatNumber) => {
 
     const selectedRow = theatrePreview[rowIndex].row
-    const selectedSeat = `${selectedRow}-${section}-${seatNumber}`
+    const selectedSeat = `${selectedRow}-${seatNumber}`
     const seatStatus = theatrePreview[rowIndex][section][seatNumber]
 
     if(seatStatus === "NB" | seatStatus ==="NBW" | seatStatus ==="NBWC"){
