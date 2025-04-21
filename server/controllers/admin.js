@@ -58,6 +58,16 @@ adminRouter.get("/details", async (req, res) => {
   }
 });
 
+adminRouter.get("/admins", async (req, res) => {
+  try {
+    const result = await client.query("SELECT * FROM ADMIN");
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Fetch admins error:", error);
+    res.status(500).json({ error: "Failed to retrieve admins" });
+  }
+});
+
 adminRouter.post("/add/admin", async (req, res) => {
   const { admin_id, role, permissions, username, phone, password } = req.body;
 

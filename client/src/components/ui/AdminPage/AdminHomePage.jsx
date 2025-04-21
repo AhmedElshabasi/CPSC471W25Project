@@ -29,6 +29,8 @@ const AdminHomePage = () => {
   const [adminDetails, setAdminDetails] = useState([]);
   const [theatres, setTheatres] = useState([]);
   const [movies, setMovies] = useState([]);
+  const [admins, setAdmins] = useState([]);
+  const [movieActors, setMovieActors] = useState([]);
 
   const [theatreLocation, setTheatreLocation] = useState("");
   const [theatrePhone, setTheatrePhone] = useState("");
@@ -63,6 +65,13 @@ const AdminHomePage = () => {
   const [adminSuccess, setAdminSuccess] = useState("");
   const [theatreSuccess, setTheatreSuccess] = useState("");
   const [movieSuccess, setMovieSuccess] = useState("");
+
+  const [deleteTheatreLocation, setDeleteTheatreLocation] = useState("");
+  const [deleteMovieName, setDeleteMovieName] = useState("");
+  const [deleteAdminUsername, setDeleteAdminUsername] = useState("");
+  const [deleteActorMovie, setDeleteActorMovie] = useState("");
+
+  const [dataRefresh, setDataRefresh] = useState(false);
 
   const retrieveDetails = async (adminId) => {
     try {
@@ -130,6 +139,72 @@ const AdminHomePage = () => {
     }
   };
 
+  const retrieveAdmins = async () => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/admin/admins`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.log("Retrieving Admins Failed");
+        return;
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Admins error:", error);
+    }
+  };
+
+  const retrieveMovieActors = async () => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/movies/actors`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.log("Retrieving Movie Actors Failed");
+        return;
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Movie Actors error:", error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
+        const data = await retrieveAdmins();
+        if (data) setAdmins(data.rows);
+      } catch (error) {
+        console.error("Error fetching admins:", error.message);
+      }
+    };
+
+    fetchAdmins();
+  }, [dataRefresh]);
+
+  useEffect(() => {
+    const fetchActors = async () => {
+      try {
+        const data = await retrieveMovieActors();
+        if (data) setMovieActors(data.rows);
+      } catch (error) {
+        console.error("Error fetching movie actors:", error.message);
+      }
+    };
+
+    fetchActors();
+  }, [dataRefresh]);
+
   useEffect(() => {
     const fetchDetails = async () => {
       try {
@@ -152,7 +227,7 @@ const AdminHomePage = () => {
       }
     };
     fetchTheatres();
-  }, [adminDetails]);
+  }, [dataRefresh]);
 
   useEffect(() => {
     const fetchMovies = async () => {
@@ -164,14 +239,11 @@ const AdminHomePage = () => {
       }
     };
     fetchMovies();
-  }, [adminDetails]);
+  }, [dataRefresh]);
 
   const handleAddTheatre = async () => {
+    console.log(movies);
     const phoneRegex = /^\d{3}-?\d{3}-?\d{4}$/;
-
-    console.log(adminDetails);
-    console.log(adminDetails.permissions === "Theatre Management");
-    console.log(adminDetails.permissions);
 
     if (adminDetails.permissions !== "Theatre Management") {
       setTheatreSuccess("");
@@ -261,7 +333,7 @@ const AdminHomePage = () => {
     const phoneRegex = /^\d{3}-?\d{3}-?\d{4}$/;
     const adminIdRegex = /^[0-9]+$/;
 
-    if (adminDetails.role != "Manager") {
+    if (adminDetails.role !== "Manager") {
       setAdminSuccess("");
       return setAdminError("Only Managers are able to add other admins.");
     }
@@ -297,6 +369,9 @@ const AdminHomePage = () => {
       setAdminSuccess("");
       return setAdminError("Not a valid admin role.");
     }
+
+    // Check to see if username is not taken for admin. Will require useEffect to check through all admins
+    // Also need to make sure for permissions and roles that case-sensitivity and spaces doesn't affect adding the admin.
 
     if (!phoneRegex.test(adminPhone)) {
       setAdminSuccess("");
@@ -384,6 +459,123 @@ const AdminHomePage = () => {
         "An unexpected error occurred while adding the actor.",
         error
       );
+    }
+  };
+
+  const handleDeleteTheatre = async (location, companyName) => {
+    if (adminDetails.permissions !== "Theatre Management") {
+      return alert("You do not have permission to delete theatres.");
+    }
+
+    try {
+      const res = await fetch(
+        "http://localhost:3001/api/theatre/delete/theatre",
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            location,
+            companyName,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setDataRefresh((prev) => !prev);
+        alert(`Theatre at "${location}" was deleted.`);
+      } else {
+        alert(data.error || "Failed to delete theatre.");
+      }
+    } catch (error) {
+      console.error("Delete theatre error:", error);
+      alert("Unexpected error deleting theatre.");
+    }
+  };
+
+  const handleDeleteMovie = async (movieName) => {
+    if (adminDetails.permissions !== "Movie Listing Management") {
+      return alert("You do not have permission to delete movies.");
+    }
+
+    try {
+      const res = await fetch("http://localhost:3001/api/movies/delete/movie", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: movieName }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setDataRefresh((prev) => !prev);
+        alert(`Movie "${movieName}" deleted.`);
+      } else {
+        alert(data.error || "Failed to delete movie.");
+      }
+    } catch (error) {
+      console.error("Delete movie error:", error);
+      alert("Unexpected error deleting movie.");
+    }
+  };
+
+  const handleDeleteAdmin = async (admin_id) => {
+    if (adminDetails.role !== "Manager") {
+      return alert("Only Managers can delete admins.");
+    }
+
+    if (adminDetails.admin_id === admin_id) {
+      return alert("Cannot remove yourself while logged in!");
+    }
+
+    try {
+      const res = await fetch("http://localhost:3001/api/admin/delete/admin", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin_id }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setDataRefresh((prev) => !prev);
+        alert(`Admin "${admin_id}" was deleted.`);
+      } else {
+        alert(data.error || "Failed to delete admin.");
+      }
+    } catch (error) {
+      console.error("Delete admin error:", error);
+      alert("Unexpected error deleting admin.");
+    }
+  };
+
+  const handleDeleteMovieActor = async (movieName, actorName) => {
+    if (adminDetails.permissions !== "Movie Listing Management") {
+      return alert("You do not have permission to delete movie actors.");
+    }
+
+    try {
+      const res = await fetch("http://localhost:3001/api/movies/delete/actor", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: movieName,
+          actor: actorName,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setDataRefresh((prev) => !prev);
+        alert(`Removed "${actorName}" from "${movieName}".`);
+      } else {
+        alert(data.error || "Failed to delete actor.");
+      }
+    } catch (error) {
+      console.error("Delete movie actor error:", error);
+      alert("Unexpected error deleting movie actor.");
     }
   };
 
@@ -647,10 +839,216 @@ const AdminHomePage = () => {
               </div>
             </TabsContent>
             <TabsContent value="Delete">
-              <p className="text-lg font-bold">Delete Theatre</p>
-              <p className="text-lg font-bold">Delete Movies</p>
-              <p className="text-lg font-bold">Delete Admin</p>
-              <p className="text-lg font-bold">Delete Movie Actor</p>
+              <div className="space-y-2">
+                <p className="text-lg font-bold">Delete Theatre</p>
+                <Input
+                  placeholder="Search by Location"
+                  value={deleteTheatreLocation}
+                  onChange={(e) => setDeleteTheatreLocation(e.target.value)}
+                />
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[30%]">Location</TableHead>
+                      <TableHead className="w-[25%]">Phone Number</TableHead>
+                      <TableHead className="w-[25%]">Company</TableHead>
+                      <TableHead className="w-[20%] text-center">
+                        Action
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {theatres
+                      .filter(
+                        (theatre) =>
+                          deleteTheatreLocation.trim() !== "" &&
+                          theatre.location
+                            .toLowerCase()
+                            .includes(deleteTheatreLocation.toLowerCase())
+                      )
+                      .map((theatre) => (
+                        <TableRow key={theatre.location}>
+                          <TableCell className="w-[30%]">
+                            {theatre.location}
+                          </TableCell>
+                          <TableCell className="w-[25%]">
+                            {theatre.phone_number}
+                          </TableCell>
+                          <TableCell className="w-[25%]">
+                            {theatre.company_name}
+                          </TableCell>
+                          <TableCell className="w-[20%] text-center">
+                            <Button
+                              variant="destructive"
+                              onClick={() =>
+                                handleDeleteTheatre(
+                                  theatre.location,
+                                  theatre.company_name
+                                )
+                              }
+                            >
+                              Delete
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="space-y-2 mt-8">
+                <p className="text-lg font-bold">Delete Movie</p>
+                <Input
+                  placeholder="Enter Movie Name"
+                  value={deleteMovieName}
+                  onChange={(e) => setDeleteMovieName(e.target.value)}
+                />
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[20%]">Name</TableHead>
+                      <TableHead className="w-[10%]">Movie ID</TableHead>
+                      <TableHead className="w-[15%]">Genre</TableHead>
+                      <TableHead className="w-[15%]">PG Rating</TableHead>
+                      <TableHead className="w-[20%]">Release Date</TableHead>
+                      <TableHead className="w-[20%] text-center">
+                        Action
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {movies
+                      .filter(
+                        (movie) =>
+                          deleteMovieName.trim() !== "" &&
+                          movie.name
+                            .toLowerCase()
+                            .includes(deleteMovieName.toLowerCase())
+                      )
+                      .map((movie, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="w-[20%]">
+                            {movie.name}
+                          </TableCell>
+                          <TableCell className="w-[10%]">
+                            {movie.movie_id}
+                          </TableCell>
+                          <TableCell className="w-[15%]">
+                            {movie.genre}
+                          </TableCell>
+                          <TableCell className="w-[15%]">
+                            {movie.pg_rating}
+                          </TableCell>
+                          <TableCell className="w-[20%]">
+                            {new Date(movie.release_date).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell className="w-[20%] text-center">
+                            <Button
+                              variant="destructive"
+                              onClick={() => handleDeleteMovie(movie.name)}
+                            >
+                              Delete
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="space-y-2 mt-8">
+                <p className="text-lg font-bold">Delete Admin</p>
+                <Input
+                  placeholder="Search by Username"
+                  value={deleteAdminUsername}
+                  onChange={(e) => setDeleteAdminUsername(e.target.value)}
+                />
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[10%]">Admin ID</TableHead>
+                      <TableHead className="w-[15%]">Username</TableHead>
+                      <TableHead className="w-[15%]">Role</TableHead>
+                      <TableHead className="w-[25%]">Permissions</TableHead>
+                      <TableHead className="w-[20%]">Phone</TableHead>
+                      <TableHead className="w-[15%] text-center">
+                        Action
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {admins
+                      .filter(
+                        (admin) =>
+                          deleteAdminUsername.trim() !== "" &&
+                          admin.username
+                            .toLowerCase()
+                            .includes(deleteAdminUsername.toLowerCase())
+                      )
+                      .map((admin) => (
+                        <TableRow key={admin.admin_id}>
+                          <TableCell>{admin.admin_id}</TableCell>
+                          <TableCell>{admin.username}</TableCell>
+                          <TableCell>{admin.role}</TableCell>
+                          <TableCell>{admin.permissions}</TableCell>
+                          <TableCell>{admin.phone_number}</TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              variant="destructive"
+                              onClick={() => handleDeleteAdmin(admin.admin_id)}
+                            >
+                              Delete
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="space-y-2 mt-8">
+                <p className="text-lg font-bold">Delete Movie Actor</p>
+                <Input
+                  placeholder="Search by Actor Name"
+                  value={deleteActorMovie}
+                  onChange={(e) => setDeleteActorMovie(e.target.value)}
+                />
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[40%]">Movie</TableHead>
+                      <TableHead className="w-[40%]">Actor</TableHead>
+                      <TableHead className="w-[20%] text-center">
+                        Action
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {movieActors
+                      .filter(
+                        (actor) =>
+                          deleteActorMovie.trim() !== "" &&
+                          actor.actor
+                            .toLowerCase()
+                            .includes(deleteActorMovie.toLowerCase())
+                      )
+                      .map((actor, index) => (
+                        <TableRow key={`${actor.name}-${actor.actor}-${index}`}>
+                          <TableCell>{actor.name}</TableCell>
+                          <TableCell>{actor.actor}</TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              variant="destructive"
+                              onClick={() =>
+                                handleDeleteMovieActor(actor.name, actor.actor)
+                              }
+                            >
+                              Delete
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
             </TabsContent>
             <TabsContent value="Modify">
               <p className="text-lg font-bold">Modify Theatre</p>

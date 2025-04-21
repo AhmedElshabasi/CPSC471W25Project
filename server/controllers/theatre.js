@@ -50,16 +50,18 @@ theatreRouter.post("/add/theatre", async (req, res) => {
 });
 
 theatreRouter.delete("/delete/theatre", async (req, res) => {
-  const { location } = req.body;
+  const { location, companyName } = req.body;
 
-  if (!location) {
-    return res.status(400).json({ error: "Theatre location is required." });
+  if (!location || !companyName) {
+    return res
+      .status(400)
+      .json({ error: "Theatre location and company name are required." });
   }
 
   try {
     const result = await client.query(
-      `DELETE FROM THEATRE WHERE Location = $1 RETURNING *`,
-      [location]
+      `DELETE FROM THEATRE WHERE Location = $1 AND Company_name = $2 RETURNING *`,
+      [location, companyName]
     );
 
     if (result.rowCount === 0) {

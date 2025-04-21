@@ -78,6 +78,16 @@ movieRouter.post("/add/movie", async (req, res) => {
   }
 });
 
+movieRouter.get("/actors", async (req, res) => {
+  try {
+    const result = await client.query("SELECT * FROM MOVIE_ACTOR");
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Fetch movie actors error:", error);
+    res.status(500).json({ error: "Failed to retrieve movie actors" });
+  }
+});
+
 movieRouter.post("/add/actor", async (req, res) => {
   const { name, actor } = req.body;
 
