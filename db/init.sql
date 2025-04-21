@@ -12,7 +12,7 @@ CREATE TYPE permission_enum as ENUM ('Theatre Management', 'Comment Management',
 
 CREATE TABLE COMPANY(
 Company_name					VARCHAR(30)				NOT NULL,
-Location						VARCHAR(30)				NOT NULL,
+Location						VARCHAR(255)				NOT NULL,
 Phone_number					VARCHAR(15),				
 PRIMARY KEY (Company_name));
 

@@ -15,6 +15,7 @@ import ChangePasswordPage from "./components/ChangePassword";
 import AdminRoute from "./components/ui/AdminPage/AdminRoute";
 import AdminHomePage from "./components/ui/AdminPage/AdminHomePage"
 import NotAuthorizedAdmin from './components/ui/AdminPage/NotAuthorizedAdmin'
+import BookTicketPage from "./components/BookTicketPage";
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
               <Route path="/movie/:id" element={<TicketPage />} />
             <Route path="/admin/not-authorized" element={<NotAuthorizedAdmin/>} />
               <Route path="/users/change-password" element={<ChangePasswordPage/>}/>
+            <Route path="/movie/:id/booktickets" element={<BookTicketPage />}/>
             </Routes>
           </AuthProvider>
         </Router>
