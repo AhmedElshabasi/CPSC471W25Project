@@ -17,6 +17,8 @@ import Footer from "./components/ui/footer";
 import AdminHomePage from "./components/ui/AdminPage/AdminHomePage";
 import NotAuthorizedAdmin from "./components/ui/AdminPage/NotAuthorizedAdmin";
 import BookTicketPage from "./components/BookTicketPage";
+import AddCard from "./components/AddCard";
+import AddPaypal from "./components/AddPaypal";
 import RequestMoviePage from "./components/RequestMoviePage.jsx";
 
 function App() {
@@ -56,6 +58,8 @@ function App() {
                 path="/movie/:id/booktickets"
                 element={<BookTicketPage />}
               />
+              <Route path="/payment/add-card" element={<AddCard />} />
+              <Route path="/payment/add-paypal" element={<AddPaypal />} />
             </Routes>
             <Footer></Footer>
           </AuthProvider>

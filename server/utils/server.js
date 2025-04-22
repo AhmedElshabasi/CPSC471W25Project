@@ -4,6 +4,8 @@ import movieRouter from "../controllers/movies.js";
 import userRouter from "../controllers/users.js";
 import theatreRouter from "../controllers/theatre.js";
 import adminRouter from "../controllers/admin.js";
+import paymentRouter from "../controllers/payment.js";
+import ticketRouter from "../controllers/ticket.js";
 import userRatingRouter from "../controllers/userRatings.js";
 import companyRouter from "../controllers/company.js";
 
@@ -18,6 +20,8 @@ const createServer = () => {
   app.use("/api/movies", movieRouter);
   app.use("/api/admin", adminRouter);
   app.use("/api/theatre", theatreRouter);
+  app.use("/api/ticket", ticketRouter);
+  app.use("/api/payment", paymentRouter);
   app.use("/api/userRating", userRatingRouter);
   app.use("/api/company", companyRouter);
 
