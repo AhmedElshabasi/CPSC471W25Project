@@ -40,6 +40,8 @@ const AdminHomePage = () => {
   const [admins, setAdmins] = useState([]);
   const [movieActors, setMovieActors] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [movieRequests, setMovieRequests] = useState([]);
+  const [customers, setCustomers] = useState([]);
 
   const [theatreLocation, setTheatreLocation] = useState("");
   const [theatrePhone, setTheatrePhone] = useState("");
@@ -225,6 +227,28 @@ const AdminHomePage = () => {
     }
   };
 
+  const fetchMovieRequests = async () => {
+    try {
+      const res = await fetch("http://localhost:3001/api/movies/requests");
+      const data = await res.json();
+      return data.rows || [];
+    } catch (err) {
+      console.error("Failed to fetch movie requests:", err);
+      return [];
+    }
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      const res = await fetch("http://localhost:3001/api/users/customers");
+      const data = await res.json();
+      return data.rows || [];
+    } catch (err) {
+      console.error("Failed to fetch customers:", err);
+      return [];
+    }
+  };
+
   useEffect(() => {
     const fetchAdmins = async () => {
       try {
@@ -297,6 +321,16 @@ const AdminHomePage = () => {
       }
     };
     fetchRatings();
+  }, [dataRefresh]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const requests = await fetchMovieRequests();
+      const users = await fetchCustomers();
+      setMovieRequests(requests);
+      setCustomers(users);
+    };
+    loadData();
   }, [dataRefresh]);
 
   const resetStatusMessages = () => {
@@ -782,6 +816,35 @@ const AdminHomePage = () => {
     }
   };
 
+  const handleDeleteRequest = async (customerId, movieName) => {
+    if (adminDetails.permissions !== "Movie Listing Management") {
+      return alert("You do not have permission to delete movie requests.");
+    }
+    try {
+      const res = await fetch(
+        "http://localhost:3001/api/movies/delete/request",
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customer_id: customerId,
+            movie_name: movieName,
+          }),
+        }
+      );
+
+      if (res.ok) {
+        setDataRefresh((prev) => !prev);
+        return alert(`Successfully deleted movie request for "${movieName}"`);
+      } else {
+        const err = await res.json();
+        console.error("Delete failed:", err);
+      }
+    } catch (err) {
+      console.error("Request delete error:", err);
+    }
+  };
+
   return (
     <div className="w-full h-mvh flex justify-center items-center py-[20pt]">
       <Card className="w-[85%] h-full">
@@ -846,10 +909,14 @@ const AdminHomePage = () => {
                 </Card>
                 <Card className="w-1/4">
                   <CardHeader>
-                    <p className="text-sm font-semibold">Total Revenue</p>
+                    <p className="text-sm font-semibold">
+                      Number of Movie Requests
+                    </p>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-semibold">{theatres.length}</p>
+                    <p className="text-2xl font-semibold">
+                      {movieRequests.length}
+                    </p>
                   </CardContent>
                 </Card>
                 <Card className="w-1/4">
@@ -857,7 +924,7 @@ const AdminHomePage = () => {
                     <p className="text-sm font-semibold">Number of Customers</p>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-semibold">{theatres.length}</p>
+                    <p className="text-2xl font-semibold">{customers.length}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -866,6 +933,61 @@ const AdminHomePage = () => {
                   <CardHeader>
                     <p className="text-bold">Overview</p>
                   </CardHeader>
+                  <CardContent className="flex flex-col gap-4 h-[330px] overflow-hidden">
+                    {/* Movie Requests */}
+                    <div className="flex-1 min-h-0 flex flex-col">
+                      <p className="text-sm font-semibold mb-1">
+                        Movie Requests
+                      </p>
+                      <div className="bg-muted rounded-md p-2 overflow-y-auto flex-1 border border-border">
+                        {movieRequests.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">
+                            No requests yet.
+                          </p>
+                        ) : (
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="text-left border-b border-border">
+                                <th className="py-1 pr-4">Customer ID</th>
+                                <th className="py-1 pr-4">Movie</th>
+                                <th className="py-1">Action</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {movieRequests.map((req, idx) => (
+                                <tr
+                                  key={idx}
+                                  className="border-b border-border"
+                                >
+                                  <td className="py-1 pr-4">
+                                    {req.customer_id}
+                                  </td>
+                                  <td className="py-1 pr-4 italic">
+                                    {req.movie_name}
+                                  </td>
+                                  <td className="py-1">
+                                    <button
+                                      onClick={() =>
+                                        handleDeleteRequest(
+                                          req.customer_id,
+                                          req.movie_name
+                                        )
+                                      }
+                                      className="text-red-500 hover:underline"
+                                    >
+                                      Delete
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Admin Actions */}
+                  </CardContent>
                 </Card>
                 <Card className="w-1/2">
                   <CardHeader>

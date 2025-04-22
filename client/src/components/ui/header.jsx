@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 import { Input } from "./input";
 import { Button } from "./button";
 import { Film } from "lucide-react";
-import { useAuth } from "../../AuthContext"; 
-import { cn } from "@/lib/utils"
+import { useAuth } from "../../AuthContext";
+import { cn } from "@/lib/utils";
 
 function Header() {
   const { user, isLoggedIn, logout } = useAuth();
@@ -52,6 +52,16 @@ function Header() {
     }
   };
 
+  const handleRequestMovie = () => {
+    if (!isLoggedIn) {
+      navigate("/login");
+    } else {
+      navigate(
+        `/request-movie?customer-id=${encodeURIComponent(user.customer_id)}`
+      );
+    }
+  };
+
   return (
     <div className="flex w-full bg-black h-[65px]">
       <h1 className="flex w-full h-full justify-start items-center font-bold ml-10 text-xl">
@@ -60,19 +70,25 @@ function Header() {
         </Link>
       </h1>
       <div className="flex w-full h-full justify-center items-center">
-      <Input
-        type="text"
-        placeholder="Search for Movies"
-        className={cn(
-          "h-[60%] my-[10px]",
-          search === "" ? "text-center" : "text-left"
-        )}
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        onKeyDown={searchMovie}
-      />
+        <Input
+          type="text"
+          placeholder="Search for Movies"
+          className={cn(
+            "h-[60%] my-[10px]",
+            search === "" ? "text-center" : "text-left"
+          )}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={searchMovie}
+        />
       </div>
       <div className="flex w-full h-full justify-end items-center gap-4 mr-10">
+        <button
+          onClick={handleRequestMovie}
+          className="text-white hover:underline font-medium text-sm"
+        >
+          Request Movie
+        </button>
         {!isLoggedIn ? (
           <>
             <Link to="/signup">
@@ -90,7 +106,9 @@ function Header() {
               </div>
             </Link>
             <Link to="/">
-              <Button variant="outline" onClick={logout} className="h-[60%]">Logout</Button>
+              <Button variant="outline" onClick={logout} className="h-[60%]">
+                Logout
+              </Button>
             </Link>
           </div>
         )}

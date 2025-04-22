@@ -88,6 +88,71 @@ movieRouter.get("/actors", async (req, res) => {
   }
 });
 
+movieRouter.get("/requests", async (req, res) => {
+  try {
+    const result = await client.query(
+      `SELECT Customer_id, Movie_name FROM REQUEST`
+    );
+
+    res.status(200).json({ rows: result.rows || [] });
+  } catch (error) {
+    console.error("Error fetching movie requests:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+movieRouter.post("/add/requests", async (req, res) => {
+  const { customer_id, movie_name } = req.body;
+
+  if (!customer_id || !movie_name) {
+    return res
+      .status(400)
+      .json({ error: "Customer ID and Movie Name are required." });
+  }
+
+  try {
+    const result = await client.query(
+      `INSERT INTO REQUEST (Customer_id, Movie_name)
+         VALUES ($1, $2)
+         RETURNING *`,
+      [customer_id, movie_name]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(409).json({ error: "Request already exists." });
+    }
+
+    res.status(201).json({ message: "Movie request submitted successfully." });
+  } catch (error) {
+    console.error("Error submitting movie request:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+movieRouter.delete("/delete/request", async (req, res) => {
+  const { customer_id, movie_name } = req.body;
+
+  if (!customer_id || !movie_name) {
+    return res.status(400).json({ error: "Missing customer_id or movie_name" });
+  }
+
+  try {
+    const result = await client.query(
+      `DELETE FROM REQUEST WHERE Customer_id = $1 AND Movie_name = $2`,
+      [customer_id, movie_name]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Request not found." });
+    }
+
+    res.status(200).json({ message: "Request deleted successfully." });
+  } catch (err) {
+    console.error("Delete request error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 movieRouter.post("/add/actor", async (req, res) => {
   const { name, actor } = req.body;
 
