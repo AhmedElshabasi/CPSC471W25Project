@@ -37,6 +37,67 @@ const UsersPage = () => {
   const [showAddOptions, setShowAddOptions] = useState(false);
   const navigate = useNavigate();
 
+  const [tickets, setTickets] = useState([]);
+  const [loadingTickets, setLoadingTickets] = useState(true);
+
+useEffect(() => {
+  const fetchTickets = async () => {
+    try {
+      const res = await fetch("http://localhost:3001/api/ticket", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to fetch tickets");
+      }
+
+      setTickets(data);
+    } catch (err) {
+      console.error("Error fetching tickets:", err);
+      setTickets([]); // fallback to empty
+    } finally {
+      setLoadingTickets(false);
+    }
+  };
+
+  if (token) fetchTickets();
+}, [token,tickets]);
+
+const handleRefund = async (ticketId, ticketType) => {
+  try {
+    const response = await fetch(`http://localhost:3001/api/ticket/${ticketId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ ticketType: ticketType.toLowerCase() }),
+    });
+
+    const text = await response.text();
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      throw new Error("Invalid JSON returned.");
+    }
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to refund ticket.");
+    }
+
+    alert("Ticket refunded successfully.");
+
+  } catch (err) {
+    console.error("Refund error:", err);
+    alert(err.message || "An error occurred while processing the refund.");
+  }
+};
+
   const fetchPayments = async () => {
     try {
       const res = await fetch("http://localhost:3001/api/payment", {
@@ -224,31 +285,76 @@ const UsersPage = () => {
         </TabsList>
 
         <TabsContent value="tickets" className="flex-1 flex flex-col">
-          <ScrollArea className="flex-1 pr-4">
-            {[1, 2, 3].map((ticket) => (
-              <Card key={ticket} className="mb-4">
+        <ScrollArea className="flex-1 pr-4">
+          {loadingTickets ? (
+            <p>Loading your tickets...</p>
+          ) : tickets.length === 0 ? (
+            <div className="text-center text-gray-500 mt-10">No tickets booked yet.</div>
+          ) : (
+            tickets.map((ticket, idx) => (
+              <Card key={ticket.ticket_id} className="mb-4">
                 <CardHeader>
-                  <CardTitle>Movie Name #{ticket}</CardTitle>
+                  <CardTitle>
+                    {ticket.movie_name || "Untitled Movie"} — {ticket.type}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="flex justify-between items-center">
-                  <div>
-                    <p>Purchase Date: 2025-04-01</p>
-                    <p>Date: 2025-04-05</p>
-                    <p>Time: 7:00 PM</p>
-                    <p>Theatre_location, Auditorium_number</p>
-                    <p>Seats: A{ticket}, B{ticket}</p>
-                    <p>Recliner_seat</p>
+                  <div className="text-sm space-y-1">
+                  <p><strong>Purchase Date:</strong> {ticket.purchase_date?.split("T")[0]}</p>
+                    <p><strong>Time:</strong> {ticket.movie_time && (() => {
+                      const [hours, minutes] = ticket.movie_time.split(":");
+                      const date = new Date();
+                      date.setHours(parseInt(hours), parseInt(minutes));
+                      return date.toLocaleTimeString("en-US", {
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true,
+                      });
+                    })()}</p>
 
+                    <p><strong>Theatre:</strong> {ticket.theatre_location}, Auditorium {ticket.auditorium_number}</p>
+                    <p><strong>Seat ID:</strong> {ticket.seat_id}</p>
+                    {ticket.type === "Regular" && (
+                      <p><strong>Recliner:</strong> {ticket.recliner_seat ? "Yes" : "No"}</p>
+                    )}
+                    {ticket.type === "Premium" && (
+                      <>
+                        <p><strong>Screen Type:</strong> {ticket.screen_type}</p>
+                        <p><strong>Seat Type:</strong> {ticket.seat_type}</p>
+                      </>
+                    )}
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline">Modify</Button>
-                    <Button>Refund</Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button>Refund</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirm Refund</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to refund this ticket? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-red-600 hover:bg-red-700"
+                          onClick={() => handleRefund(ticket.ticket_id, ticket.type)}
+                        >
+                          Yes, Refund
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </ScrollArea>
-        </TabsContent>
+            ))
+          )}
+        </ScrollArea>
+      </TabsContent>
 
         <TabsContent value="profile">
           <Card>

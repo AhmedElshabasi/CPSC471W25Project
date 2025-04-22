@@ -1421,11 +1421,288 @@ const AdminHomePage = () => {
                 </Table>
               </div>
             </TabsContent>
-            <TabsContent value="Modify">
-              <p className="text-lg font-bold">Modify Theatre</p>
-              <p className="text-lg font-bold">Modify Movies</p>
-              <p className="text-lg font-bold">Modify Admin</p>
-              <p className="text-lg font-bold">Modify Movie Actor</p>
+            <TabsContent value="Modify" className="space-y-10">
+              {/* Modify Theatre */}
+              <div className="space-y-2">
+                <p className="text-lg font-bold">Modify Theatre</p>
+                <Input
+                  placeholder="Search by Location"
+                  value={deleteTheatreLocation}
+                  onChange={(e) => setDeleteTheatreLocation(e.target.value)}
+                />
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Current Phone</TableHead>
+                      <TableHead>Current Company</TableHead>
+                      <TableHead>New Phone</TableHead>
+                      <TableHead>New Company</TableHead>
+                      <TableHead className="text-center">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {theatres
+                      .filter(theatre => theatre.location.toLowerCase().includes(deleteTheatreLocation.toLowerCase()))
+                      .map((theatre) => {
+                        const loc = theatre.location;
+                        return (
+                          <TableRow key={loc}>
+                            <TableCell>{loc}</TableCell>
+                            <TableCell>{theatre.phone_number}</TableCell>
+                            <TableCell>{theatre.company_name}</TableCell>
+                            <TableCell>
+                              <Input
+                                placeholder="New Phone"
+                                onChange={(e) => theatre.newPhone = e.target.value}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                placeholder="New Company"
+                                onChange={(e) => theatre.newCompany = e.target.value}
+                              />
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Button
+                                onClick={async () => {
+                                  if (adminDetails.permissions !== "Theatre Management") return alert("No permission");
+                                  try {
+                                    const res = await fetch("http://localhost:3001/api/theatre/update/theatre", {
+                                      method: "PUT",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({
+                                        location: loc,
+                                        new_phone: theatre.newPhone || theatre.phone_number,
+                                        new_company: theatre.newCompany || theatre.company_name,
+                                      }),
+                                    });
+                                    const data = await res.json();
+                                    if (res.ok) {
+                                      setDataRefresh(prev => !prev);
+                                      alert("Theatre updated");
+                                    } else alert(data.error);
+                                  } catch (err) {
+                                    console.error(err);
+                                    alert("Update failed");
+                                  }
+                                }}
+                              >
+                                Update
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Modify Movie */}
+              <div className="space-y-2">
+                <p className="text-lg font-bold">Modify Movie</p>
+                <Input
+                  placeholder="Search by Movie Name"
+                  value={deleteMovieName}
+                  onChange={(e) => setDeleteMovieName(e.target.value)}
+                />
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Genre</TableHead>
+                      <TableHead>PG Rating</TableHead>
+                      <TableHead>Release Date</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead className="text-center">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {movies
+                      .filter(movie => movie.name.toLowerCase().includes(deleteMovieName.toLowerCase()))
+                      .map((movie) => (
+                        <TableRow key={movie.name}>
+                          <TableCell>{movie.name}</TableCell>
+                          <TableCell>
+                            <Input onChange={(e) => movie.newGenre = e.target.value} placeholder={movie.genre} />
+                          </TableCell>
+                          <TableCell>
+                            <Input onChange={(e) => movie.newRating = e.target.value} placeholder={movie.pg_rating} />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="date"
+                              value={movie.newDate || new Date(movie.release_date).toISOString().split("T")[0]}
+                              onChange={(e) => (movie.newDate = e.target.value)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input onChange={(e) => movie.newDesc = e.target.value} placeholder={movie.description} />
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              onClick={async () => {
+                                if (adminDetails.permissions !== "Movie Listing Management") return alert("No permission");
+                                try {
+                                  const res = await fetch("http://localhost:3001/api/movies/update/movie", {
+                                    method: "PUT",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                      name: movie.name,
+                                      genre: movie.newGenre || movie.genre,
+                                      pg_rating: movie.newRating || movie.pg_rating,
+                                      release_date: movie.newDate || movie.release_date,
+                                      description: movie.newDesc || movie.description,
+                                    }),
+                                  });
+                                  const data = await res.json();
+                                  if (res.ok) {
+                                    setDataRefresh(prev => !prev);
+                                    alert("Movie updated");
+                                  } else alert(data.error);
+                                } catch (err) {
+                                  console.error(err);
+                                  alert("Update failed");
+                                }
+                              }}
+                            >
+                              Update
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Modify Admin */}
+              <div className="space-y-2">
+                <p className="text-lg font-bold">Modify Admin</p>
+                <Input
+                  placeholder="Search by Username"
+                  value={deleteAdminUsername}
+                  onChange={(e) => setDeleteAdminUsername(e.target.value)}
+                />
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Username</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Permissions</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead className="text-center">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {admins
+                      .filter(admin => admin.username.toLowerCase().includes(deleteAdminUsername.toLowerCase()))
+                      .map((admin) => (
+                        <TableRow key={admin.admin_id}>
+                          <TableCell>{admin.username}</TableCell>
+                          <TableCell>
+                            <Input onChange={(e) => admin.newRole = e.target.value} placeholder={admin.role} />
+                          </TableCell>
+                          <TableCell>
+                            <Input onChange={(e) => admin.newPermissions = e.target.value} placeholder={admin.permissions} />
+                          </TableCell>
+                          <TableCell>
+                            <Input onChange={(e) => admin.newPhone = e.target.value} placeholder={admin.phone_number} />
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              onClick={async () => {
+                                if (adminDetails.role !== "Manager") return alert("No permission");
+                                try {
+                                  const res = await fetch("http://localhost:3001/api/admin/update/admin", {
+                                    method: "PUT",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                      admin_id: admin.admin_id,
+                                      new_role: admin.newRole || admin.role,
+                                      new_permissions: admin.newPermissions || admin.permissions,
+                                      new_phone: admin.newPhone || admin.phone_number,
+                                    }),
+                                  });
+                                  const data = await res.json();
+                                  if (res.ok) {
+                                    setDataRefresh(prev => !prev);
+                                    alert("Admin updated");
+                                  } else alert(data.error);
+                                } catch (err) {
+                                  console.error(err);
+                                  alert("Update failed");
+                                }
+                              }}
+                            >
+                              Update
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Modify Movie Actor */}
+              <div className="space-y-2">
+                <p className="text-lg font-bold">Modify Movie Actor</p>
+                <Input
+                  placeholder="Search by Actor Name"
+                  value={deleteActorMovie}
+                  onChange={(e) => setDeleteActorMovie(e.target.value)}
+                />
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Movie</TableHead>
+                      <TableHead>Current Actor</TableHead>
+                      <TableHead>New Actor</TableHead>
+                      <TableHead className="text-center">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {movieActors
+                      .filter(actor => actor.actor.toLowerCase().includes(deleteActorMovie.toLowerCase()))
+                      .map((actor) => (
+                        <TableRow key={`${actor.name}-${actor.actor}`}>
+                          <TableCell>{actor.name}</TableCell>
+                          <TableCell>{actor.actor}</TableCell>
+                          <TableCell>
+                            <Input onChange={(e) => actor.newActor = e.target.value} placeholder="New Actor" />
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              onClick={async () => {
+                                if (adminDetails.permissions !== "Movie Listing Management") return alert("No permission");
+                                try {
+                                  const res = await fetch("http://localhost:3001/api/movies/update/actor", {
+                                    method: "PUT",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                      movie_name: actor.name,
+                                      old_actor: actor.actor,
+                                      new_actor: actor.newActor,
+                                    }),
+                                  });
+                                  const data = await res.json();
+                                  if (res.ok) {
+                                    setDataRefresh(prev => !prev);
+                                    alert("Actor updated");
+                                  } else alert(data.error);
+                                } catch (err) {
+                                  console.error(err);
+                                  alert("Update failed");
+                                }
+                              }}
+                            >
+                              Update
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
