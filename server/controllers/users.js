@@ -66,13 +66,13 @@ userRouter.post("/", async (req, res, next) => {
     const result = await client.query(
       `INSERT INTO CUSTOMER (First_name, Last_name, Email_address, Username, Phone_number, Password) 
        VALUES ($1, $2, $3, $4, $5, $6) 
-       RETURNING Username, First_name, Last_name, Email_address, Phone_number`,
+       RETURNING Customer_id, Username, First_name, Last_name, Email_address, Phone_number`
       [firstname.trim(), lastname.trim(), email.trim(), username.trim(), phonenum, hashedPassword]
     );
 
     const user = result.rows[0];
 
-    const token = jwt.sign({ username: user.username }, JWT_SECRET, {
+    const token = jwt.sign({ username: user.username, customer_id: user.customer_id }, JWT_SECRET, {
       expiresIn: "7d",
     });
 
@@ -162,7 +162,7 @@ userRouter.post("/auth/login", async (req, res) => {
     return res.status(401).json({ error: "Invalid username or password" });
   }
 
-  const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: "7d" });
+  const token = jwt.sign({ username: user.username, customer_id: user.customer_id }, JWT_SECRET, { expiresIn: "7d" });
 
   res.json({ token, user });
 });
