@@ -17,6 +17,8 @@ import Footer from "./components/ui/footer";
 import AdminHomePage from "./components/ui/AdminPage/AdminHomePage";
 import NotAuthorizedAdmin from "./components/ui/AdminPage/NotAuthorizedAdmin";
 import BookTicketPage from "./components/BookTicketPage";
+import AddCard from "./components/AddCard";
+import AddPaypal from "./components/AddPaypal";
 
 function App() {
   return (
@@ -42,18 +44,11 @@ function App() {
               />
               <Route path="/movie-search/:id" element={<MovieSearchPage />} />
               <Route path="/movie/:id" element={<TicketPage />} />
-              <Route
-                path="/admin/not-authorized"
-                element={<NotAuthorizedAdmin />}
-              />
-              <Route
-                path="/users/change-password"
-                element={<ChangePasswordPage />}
-              />
-              <Route
-                path="/movie/:id/booktickets"
-                element={<BookTicketPage />}
-              />
+            <Route path="/admin/not-authorized" element={<NotAuthorizedAdmin/>} />
+              <Route path="/users/change-password" element={<ChangePasswordPage/>}/>
+            <Route path="/movie/:id/booktickets" element={<BookTicketPage />}/>
+              <Route path="/payment/add-card" element={<AddCard/>}/>
+              <Route path="/payment/add-paypal" element={<AddPaypal/>}/>
             </Routes>
             <Footer></Footer>
           </AuthProvider>

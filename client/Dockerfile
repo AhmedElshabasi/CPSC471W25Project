@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Expose port 5173 for the frontend
 EXPOSE 5173

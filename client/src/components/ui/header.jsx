@@ -5,6 +5,7 @@ import { Input } from "./input";
 import { Button } from "./button";
 import { Film } from "lucide-react";
 import { useAuth } from "../../AuthContext"; 
+import { cn } from "@/lib/utils"
 
 function Header() {
   const { user, isLoggedIn, logout } = useAuth();
@@ -59,13 +60,17 @@ function Header() {
         </Link>
       </h1>
       <div className="flex w-full h-full justify-center items-center">
-        <Input
-          type=""
-          placeholder="Search for Movies"
-          className="h-[60%] my-[10px]"
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={searchMovie}
-        ></Input>
+      <Input
+        type="text"
+        placeholder="Search for Movies"
+        className={cn(
+          "h-[60%] my-[10px]",
+          search === "" ? "text-center" : "text-left"
+        )}
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        onKeyDown={searchMovie}
+      />
       </div>
       <div className="flex w-full h-full justify-end items-center gap-4 mr-10">
         {!isLoggedIn ? (
