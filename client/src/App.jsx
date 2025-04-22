@@ -17,6 +17,7 @@ import Footer from "./components/ui/footer";
 import AdminHomePage from "./components/ui/AdminPage/AdminHomePage";
 import NotAuthorizedAdmin from "./components/ui/AdminPage/NotAuthorizedAdmin";
 import BookTicketPage from "./components/BookTicketPage";
+import RequestMoviePage from "./components/RequestMoviePage.jsx";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
               <Route path="/signUp" element={<SignUpPage />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/request-movie/:id" element={<RequestMoviePage />} />
               <Route path="/no-results" element={<NoResultsPage />} />
               <Route
                 path="/admin/home/:id"

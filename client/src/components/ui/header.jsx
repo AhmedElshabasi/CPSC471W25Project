@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Input } from "./input";
 import { Button } from "./button";
 import { Film } from "lucide-react";
-import { useAuth } from "../../AuthContext"; 
+import { useAuth } from "../../AuthContext";
 
 function Header() {
   const { user, isLoggedIn, logout } = useAuth();
@@ -51,6 +51,16 @@ function Header() {
     }
   };
 
+  const handleRequestMovie = () => {
+    if (!isLoggedIn) {
+      navigate("/login");
+    } else {
+      navigate(
+        `/request-movie?customer-id=${encodeURIComponent(user.customer_id)}`
+      );
+    }
+  };
+
   return (
     <div className="flex w-full bg-black h-[65px]">
       <h1 className="flex w-full h-full justify-start items-center font-bold ml-10 text-xl">
@@ -68,6 +78,12 @@ function Header() {
         ></Input>
       </div>
       <div className="flex w-full h-full justify-end items-center gap-4 mr-10">
+        <button
+          onClick={handleRequestMovie}
+          className="text-white hover:underline font-medium text-sm"
+        >
+          Request Movie
+        </button>
         {!isLoggedIn ? (
           <>
             <Link to="/signup">
@@ -85,7 +101,9 @@ function Header() {
               </div>
             </Link>
             <Link to="/">
-              <Button variant="outline" onClick={logout} className="h-[60%]">Logout</Button>
+              <Button variant="outline" onClick={logout} className="h-[60%]">
+                Logout
+              </Button>
             </Link>
           </div>
         )}

@@ -24,7 +24,8 @@ userRouter.post("/", async (req, res, next) => {
   // === Username validation ===
   if (/\s/.test(username) || username.length > 16) {
     return res.status(400).json({
-      error: "Username must not contain spaces and must be 16 characters or less.",
+      error:
+        "Username must not contain spaces and must be 16 characters or less.",
     });
   }
 
@@ -49,15 +50,21 @@ userRouter.post("/", async (req, res, next) => {
   }
 
   // Normalize phone number to 123-456-7890
-  phonenum = phonenum.replace(/-/g, "").replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
+  phonenum = phonenum
+    .replace(/-/g, "")
+    .replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
 
   // === First and last name length ===
   if (firstname.length > 16) {
-    return res.status(400).json({ error: "First name must be 16 characters or less." });
+    return res
+      .status(400)
+      .json({ error: "First name must be 16 characters or less." });
   }
 
   if (lastname.length > 16) {
-    return res.status(400).json({ error: "Last name must be 16 characters or less." });
+    return res
+      .status(400)
+      .json({ error: "Last name must be 16 characters or less." });
   }
 
   try {
@@ -67,7 +74,14 @@ userRouter.post("/", async (req, res, next) => {
       `INSERT INTO CUSTOMER (First_name, Last_name, Email_address, Username, Phone_number, Password) 
        VALUES ($1, $2, $3, $4, $5, $6) 
        RETURNING Username, First_name, Last_name, Email_address, Phone_number`,
-      [firstname.trim(), lastname.trim(), email.trim(), username.trim(), phonenum, hashedPassword]
+      [
+        firstname.trim(),
+        lastname.trim(),
+        email.trim(),
+        username.trim(),
+        phonenum,
+        hashedPassword,
+      ]
     );
 
     const user = result.rows[0];
@@ -149,7 +163,10 @@ userRouter.delete("/", authenticateToken, async (req, res, next) => {
 userRouter.post("/auth/login", async (req, res) => {
   const { username, password } = req.body;
 
-  const result = await client.query("SELECT * FROM CUSTOMER WHERE Username = $1", [username]);
+  const result = await client.query(
+    "SELECT * FROM CUSTOMER WHERE Username = $1",
+    [username]
+  );
 
   if (result.rowCount === 0) {
     return res.status(401).json({ error: "Invalid username or password" });
@@ -162,7 +179,9 @@ userRouter.post("/auth/login", async (req, res) => {
     return res.status(401).json({ error: "Invalid username or password" });
   }
 
-  const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: "7d" });
+  const token = jwt.sign({ username: user.username }, JWT_SECRET, {
+    expiresIn: "7d",
+  });
 
   res.json({ token, user });
 });
@@ -198,12 +217,27 @@ userRouter.get("/profile", authenticateToken, async (req, res) => {
   }
 });
 
+userRouter.get("/customers", async (req, res) => {
+  try {
+    const result = await client.query(
+      `SELECT Customer_id, Username, First_name, Last_name FROM CUSTOMER`
+    );
+
+    res.status(200).json({ rows: result.rows || [] });
+  } catch (error) {
+    console.error("Error fetching customers:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 userRouter.post("/change-password", authenticateToken, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
   const username = req.user.username;
 
   if (!currentPassword || !newPassword) {
-    return res.status(400).json({ error: "Both current and new password are required" });
+    return res
+      .status(400)
+      .json({ error: "Both current and new password are required" });
   }
 
   try {
@@ -240,8 +274,5 @@ userRouter.post("/change-password", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-
-
 
 export default userRouter;
