@@ -31,12 +31,34 @@ adminRouter.post("/auth/login", async (req, res) => {
         expiresIn: "7d",
       }
     );
-
     res.json({ token, admin });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
+
+adminRouter.get("/details", async (req, res) => {
+  const {adminId} = req.query;
+
+  if (!adminId) {
+    return res.status(400).json({ error: "Missing Admin Id" });
+  }
+
+  try{
+    const result = await client.query(
+      `SELECT * FROM ADMIN WHERE Admin_id = $1`,
+      [adminId]
+    );
+
+    res.json(result)
+
+  }
+  catch(error){
+    console.error("Unable to retrieve details:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+
+})
 
 export default adminRouter;
