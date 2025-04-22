@@ -141,24 +141,6 @@ const AddCard = () => {
                     value={expirationInput}
                     onChange={handleInputChange}
                     />
-                <Popover>
-                <PopoverTrigger asChild>
-                    <Button
-                    variant="ghost"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-0 h-6 w-6"
-                    >
-                    <CalendarIcon className="h-4 w-4" />
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                    <Calendar
-                    mode="single"
-                    selected={expirationDate}
-                    onSelect={setExpirationDate}
-                    initialFocus
-                    />
-                </PopoverContent>
-                </Popover>
             </div>
             </div>
 
