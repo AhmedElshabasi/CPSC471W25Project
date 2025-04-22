@@ -23,10 +23,24 @@ import { BsBadgeHdFill } from "react-icons/bs";
 import TheatrePreview from "./TheatrePreview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useAuth } from "../AuthContext";
+import { useNavigate } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 
 const BookTicketPage = () => {
-
+  const { token } = useAuth();
   const rows = [
     {row: 'A', seatsLeft:['NB', 'NB'], seatsMiddle:['NB','NBW','NBWC','NB','NB',"NB", 'NBW','NBWC', "NB"], seatsRight:["NB","NB"]},
     {row: 'B', seatsLeft:['NB','NB'], seatsMiddle:['NB','NB','NB','NB','NB',"NB", "NB", "NB", "NB"], seatsRight:["NB","NB"]},
@@ -61,7 +75,94 @@ const BookTicketPage = () => {
   const [IMAXrows, setRowsIMAX] = useState(rows)
   const [rows3D, setRows3D] = useState(rows)
   const [selectTime, setSelectedTime] = useState("12:00 AM")
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [availablePayments, setAvailablePayments] = useState([]);
+  const [showAddOptions, setShowAddOptions] = useState(false);
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    const savedState = localStorage.getItem("bookingState");
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        setSelectedTime(parsed.selectTime || "12:00 AM");
+        setRegularQuantity(parsed.regularQuantity || []);
+        setPremiumQuantity(parsed.premiumQuantity || []);
+        setTotalTickets(parsed.totalTickets || []);
+        setSelectedSeatsStandard(parsed.selectedSeatsStandard || []);
+        setSelectedSeats4K(parsed.selectedSeats4K || []);
+        setSelectedSeatsIMAX(parsed.selectedSeatsIMAX || []);
+        setSelectedSeats3D(parsed.selectedSeats3D || []);
+        setPremiumType(parsed.premiumType || "4K-HDR");
+        localStorage.removeItem("bookingState");
+      } catch (e) {
+        console.error("Failed to restore booking state:", e);
+      }
+    }
+  }, []);  
+
+  useEffect(() => {
+    const allChosen = totalTickets.length > 0 && totalTickets.every(t => t.seatChosen);
+    if (allChosen && token) {
+      fetchAvailablePayments();
+    }
+  }, [totalTickets, token]);
+  
+  const fetchAvailablePayments = async () => {
+    try {
+      const res = await fetch("http://localhost:3001/api/payment", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      const data = await res.json();
+  
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to fetch payments");
+      }
+  
+      const { payments = [], cards = [], paypals = [] } = data;
+  
+      const merged = payments.map((payment) => {
+        const card = cards.find((c) => c.payment_id === payment.payment_id);
+        const paypal = paypals.find((p) => p.payment_id === payment.payment_id);
+      
+        if (card) {
+          return {
+            type: "card",
+            payment_id: payment.payment_id,
+            fullCardNumber: payment.card_number,
+            details: {
+              card_holder: card.card_holder,
+              card_type: card.card_type,
+              expiration_date: card.expiration_date,
+              last4: payment.card_number?.toString().slice(-4) || "****",
+            },
+          };
+        }
+      
+        if (paypal) {
+          return {
+            type: "paypal",
+            payment_id: payment.payment_id,
+            fullCardNumber: payment.card_number,
+            details: {
+              email_address: paypal.email_address,
+              phone_number: paypal.phone_number,
+            },
+          };
+        }
+      
+        return null;
+      }).filter(Boolean);      
+      
+  
+      setAvailablePayments(merged);
+    } catch (err) {
+      console.error("Fetch payment error:", err);
+    }
+  };  
 
   const genrateTime = () => {
     const setupTime = []
@@ -138,10 +239,79 @@ const BookTicketPage = () => {
     })
   }
 
-  const handlePurchase = () => {
-    localStorage.setItem("totalTickets", totalTickets)
+  const handlePurchase = async () => {
+    if (!token || !selectedPayment) {
+      alert("Missing token or payment method.");
+      return;
+    }
   
-  }
+    console.log("Starting purchase...");
+    console.log("Total Tickets:", totalTickets);
+    console.log("Selected Payment:", selectedPayment);
+  
+    try {
+      const promises = totalTickets.map(async (ticket, i) => {
+        const isRegular = ticket.ticketType === "Regular";
+  
+        const seatIdExtract = ticket.seatChoice?.match(/\d+/)?.[0];
+        const seatId = seatIdExtract ? parseInt(seatIdExtract) : i + 1; // fallback if parsing fails
+
+        const selected = availablePayments.find(p => p.payment_id === selectedPayment);
+        const cardNumber = selected?.fullCardNumber;
+        if (!cardNumber) {
+          throw new Error("Missing card number for selected payment.");
+        }
+  
+        const payload = {
+          ticketType: isRegular ? "regular" : "premium",
+          purchaseDate: new Date().toISOString().split("T")[0],
+          reclinerSeat: isRegular ? true : undefined,
+          price: isRegular ? 18 : 25,
+          movieTime: ticket.time,
+          theatreLocation: location,
+          auditoriumNumber: parseInt(ticket.auditorium),
+          seatId,
+          paymentId: selectedPayment,
+          cardNumber: cardNumber,
+          screenType: isRegular ? undefined : ticket.screentype,
+          seatType: isRegular ? undefined : "Premium",
+        };
+  
+        console.log(`Payload for ticket #${i + 1}:`, payload);
+  
+        const response = await fetch("http://localhost:3001/api/ticket", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+  
+        const text = await response.text();
+        console.log(`Raw response for ticket #${i + 1}:`, text);
+  
+        if (!response.ok) {
+          throw new Error(`Server responded with status ${response.status}`);
+        }
+  
+        try {
+          return JSON.parse(text);
+        } catch (parseError) {
+          console.error("JSON parsing failed:", parseError);
+          throw new Error("Invalid JSON returned from server.");
+        }
+      });
+  
+      await Promise.all(promises);
+      alert("Purchase successful! Your tickets have been booked.");
+      navigate("/users");
+    } catch (err) {
+      console.error("Purchase failed:", err);
+      alert("Failed to complete the purchase.");
+    }
+  };
+  
 
   const handleSeatDeselection = (seat, type) => {
     const seatObject = seat.seat
@@ -310,15 +480,221 @@ const BookTicketPage = () => {
               </div>
             </div>          
           </CardContent>
-          <CardFooter className="flex justify-center items-center mt-8">
-            {totalTickets.length === 0 ? (null): (() => {
+          <CardFooter className="flex flex-col justify-center items-center mt-8 gap-4">
+            {totalTickets.length === 0 ? null : (() => {
               const allChosen = totalTickets.every(ticket => ticket.seatChosen);
-              if(allChosen){
-                return <Button onClick={() => handlePurchase()}>Purchase Selected Tickets</Button>
+
+              if (allChosen) {
+                return (
+                  <div className="flex flex-col items-center space-y-4 mt-8 w-full">
+                    <CardTitle className="text-xl">Select a Payment Method</CardTitle>
+                    {availablePayments.length === 0 ? (
+                      <>
+                        {!showAddOptions ? (
+                          <Button variant="outline" onClick={() => setShowAddOptions(true)}>
+                            <Plus className="w-4 h-4 mr-2" /> Add Payment Method
+                          </Button>
+                        ) : (
+                          <div className="flex gap-4">
+                            <Button onClick={() => {
+                              localStorage.setItem("bookingState", JSON.stringify({
+                                movieName,
+                                date,
+                                location,
+                                selectedTime: selectTime,
+                                regularQuantity,
+                                premiumQuantity,
+                                totalTickets,
+                                selectedSeatsStandard,
+                                selectedSeats4K,
+                                selectedSeatsIMAX,
+                                selectedSeats3D,
+                              }));                              
+
+                              navigate("/payment/add-card", {
+                                state: { from: reactLocation.pathname + reactLocation.search },
+                              });}}>Add Card</Button>
+                            <Button onClick={() => {
+                              localStorage.setItem("bookingState", JSON.stringify({
+                                movieName,
+                                date,
+                                location,
+                                selectedTime: selectTime,
+                                regularQuantity,
+                                premiumQuantity,
+                                totalTickets,
+                                selectedSeatsStandard,
+                                selectedSeats4K,
+                                selectedSeatsIMAX,
+                                selectedSeats3D,
+                              }));                              
+                              navigate("/payment/add-paypal", {
+                                state: { from: reactLocation.pathname + reactLocation.search },
+                              });
+                              }}>Add PayPal</Button>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 w-full">
+                          {availablePayments.map((pay) => (
+                            <Card
+                              key={pay.payment_id}
+                              className={`border p-4 cursor-pointer ${
+                                selectedPayment === pay.payment_id ? "ring-2 ring-blue-500" : ""
+                              }`}
+                              onClick={() => setSelectedPayment(pay.payment_id)}
+                            >
+                              <CardTitle className="text-base">
+                                {pay.type === "card" ? "Card" : "PayPal"}
+                              </CardTitle>
+                              <p className="text-sm mt-1">
+                                {pay.type === "card" ? (
+                                  <>
+                                    {pay.details.card_type} •••• {pay.details.last4}
+                                    <br />
+                                    {pay.details.card_holder}
+                                    <br />
+                                    Expires:{" "}
+                                    {pay.details.expiration_date
+                                      ? new Date(pay.details.expiration_date).toLocaleDateString("en-GB")
+                                      : "N/A"}
+                                  </>
+                                ) : (
+                                  <>
+                                    {pay.details.email_address}
+                                    <br />
+                                    {pay.details.phone_number || ""}
+                                  </>
+                                )}
+                              </p>
+                            </Card>
+                          ))}
+                        </div>
+
+                        <div className="pt-4">
+                          <Button onClick={() => setShowAddOptions(!showAddOptions)} variant="outline">
+                            {showAddOptions ? "Cancel" : "Add Another Payment Method"}
+                          </Button>
+                          {showAddOptions && (
+                            <div className="flex gap-4 mt-4">
+                              <Button onClick={() => {
+                                localStorage.setItem("bookingState", JSON.stringify({
+                                  movieName,
+                                  date,
+                                  location,
+                                  selectedTime: selectTime,
+                                  regularQuantity,
+                                  premiumQuantity,
+                                  totalTickets,
+                                  selectedSeatsStandard,
+                                  selectedSeats4K,
+                                  selectedSeatsIMAX,
+                                  selectedSeats3D,
+                                }));
+                                
+                                navigate("/payment/add-card", {
+                                  state: { from: reactLocation.pathname + reactLocation.search },});}}>Add Card</Button>
+                              <Button onClick={() => {
+                                localStorage.setItem("bookingState", JSON.stringify({
+                                  movieName,
+                                  date,
+                                  location,
+                                  selectedTime: selectTime,
+                                  regularQuantity,
+                                  premiumQuantity,
+                                  totalTickets,
+                                  selectedSeatsStandard,
+                                  selectedSeats4K,
+                                  selectedSeatsIMAX,
+                                  selectedSeats3D,
+                                }));
+                                
+                                navigate("/payment/add-paypal", {
+                                  state: { from: reactLocation.pathname + reactLocation.search },
+                                });}}>Add PayPal</Button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Purchase button only shows once payment selected */}
+                        {selectedPayment && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button className="mt-6">
+                              Purchase Tickets
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="max-w-2xl">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Review Your Order</AlertDialogTitle>
+                              <AlertDialogDescription className="space-y-4">
+
+                                {/* Movie Info */}
+                                <div>
+                                  <p><strong>Movie:</strong> {movieName}</p>
+                                  <p><strong>Date:</strong> {date}</p>
+                                  <p><strong>Time:</strong> {selectTime}</p>
+                                  <p><strong>Location:</strong> {location}</p>
+                                </div>
+
+                                {/* Ticket Info */}
+                                <div className="mt-4">
+                                  <strong>Tickets:</strong>
+                                  <ul className="list-disc pl-6">
+                                    {totalTickets.map((ticket, idx) => (
+                                      <li key={idx}>
+                                        {ticket.ticketType} — {ticket.screentype}, Seat: {ticket.seatChoice}, Auditorium: {ticket.auditorium}, Time: {ticket.time}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+
+                                {/* Payment Info */}
+                                <div className="mt-4">
+                                  <strong>Payment Method:</strong>
+                                  <div className="ml-2">
+                                    {(() => {
+                                      const pay = availablePayments.find(p => p.payment_id === selectedPayment);
+                                      if (!pay) return "N/A";
+                                      return (
+                                        <>
+                                          {pay.type === "card" ? (
+                                            <>
+                                              {pay.details.card_type} •••• {pay.details.last4}<br />
+                                              {pay.details.card_holder}<br />
+                                              Expires: {new Date(pay.details.expiration_date).toLocaleDateString("en-GB")}
+                                            </>
+                                          ) : (
+                                            <>
+                                              {pay.details.email_address}<br />
+                                              {pay.details.phone_number || ""}
+                                            </>
+                                          )}
+                                        </>
+                                      );
+                                    })()}
+                                  </div>
+                                </div>
+
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={handlePurchase}>
+                                Confirm and Purchase Tickets
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                      </>
+                    )}
+                  </div>
+                );
               }
-              else{
-                return null
-              }
+              return null;
             })()}
           </CardFooter>
         </Card>

@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router";
+import { useLocation } from "react-router";
 
 const AddCard = () => {
   const [cardNumber, setCardNumber] = useState("");
@@ -21,6 +22,8 @@ const AddCard = () => {
 
   const [expirationInput, setExpirationInput] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || "/users";
 
 
   const handleInputChange = (e) => {
@@ -81,7 +84,7 @@ const AddCard = () => {
       setSuccess(true);
 
       setTimeout(() => {
-        navigate("/users");
+        navigate(from);
       }, 1500); // slight delay to show "Card added" toast
       // Reset form
       setCardNumber("");
