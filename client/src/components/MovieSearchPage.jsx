@@ -20,7 +20,9 @@ const MovieSearchPage = ({ movieDate }) => {
         const allMovies = data.rows;
 
         const regex = new RegExp(params.id, "i");
-        const results = allMovies.filter((movie) => regex.test(movie.name));
+        const results = allMovies.filter(
+          (movie) => regex.test(movie.name) || regex.test(movie.genre)
+        );
 
         setFilteredMovies(results);
       } catch (error) {

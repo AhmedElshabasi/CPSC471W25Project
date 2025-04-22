@@ -40,8 +40,8 @@ function Header() {
     if (e.key === "Enter" && search.trim()) {
       const regex = new RegExp(search.trim(), "i");
 
-      const filteredMovies = movieData.filter((movie) =>
-        regex.test(movie.name)
+      const filteredMovies = movieData.filter(
+        (movie) => regex.test(movie.name) || regex.test(movie.genre)
       );
 
       if (filteredMovies.length === 0) {
