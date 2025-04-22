@@ -108,11 +108,12 @@ const BookTicketPage = () => {
       const merged = payments.map((payment) => {
         const card = cards.find((c) => c.payment_id === payment.payment_id);
         const paypal = paypals.find((p) => p.payment_id === payment.payment_id);
-  
+      
         if (card) {
           return {
             type: "card",
             payment_id: payment.payment_id,
+            fullCardNumber: payment.card_number,
             details: {
               card_holder: card.card_holder,
               card_type: card.card_type,
@@ -121,20 +122,22 @@ const BookTicketPage = () => {
             },
           };
         }
-  
+      
         if (paypal) {
           return {
             type: "paypal",
             payment_id: payment.payment_id,
+            fullCardNumber: payment.card_number,
             details: {
               email_address: paypal.email_address,
               phone_number: paypal.phone_number,
             },
           };
         }
-  
-        return null; // fallback
-      }).filter(Boolean);
+      
+        return null;
+      }).filter(Boolean);      
+      
   
       setAvailablePayments(merged);
     } catch (err) {
@@ -217,10 +220,79 @@ const BookTicketPage = () => {
     })
   }
 
-  const handlePurchase = () => {
-    localStorage.setItem("totalTickets", totalTickets)
+  const handlePurchase = async () => {
+    if (!token || !selectedPayment) {
+      alert("Missing token or payment method.");
+      return;
+    }
   
-  }
+    console.log("Starting purchase...");
+    console.log("Total Tickets:", totalTickets);
+    console.log("Selected Payment:", selectedPayment);
+  
+    try {
+      const promises = totalTickets.map(async (ticket, i) => {
+        const isRegular = ticket.ticketType === "Regular";
+  
+        const seatIdExtract = ticket.seatChoice?.match(/\d+/)?.[0];
+        const seatId = seatIdExtract ? parseInt(seatIdExtract) : i + 1; // fallback if parsing fails
+
+        const selected = availablePayments.find(p => p.payment_id === selectedPayment);
+        const cardNumber = selected?.fullCardNumber;
+        if (!cardNumber) {
+          throw new Error("Missing card number for selected payment.");
+        }
+  
+        const payload = {
+          ticketType: isRegular ? "regular" : "premium",
+          purchaseDate: new Date().toISOString().split("T")[0],
+          reclinerSeat: isRegular ? true : undefined,
+          price: isRegular ? 18 : 25,
+          movieTime: ticket.time,
+          theatreLocation: location,
+          auditoriumNumber: parseInt(ticket.auditorium),
+          seatId,
+          paymentId: selectedPayment,
+          cardNumber: cardNumber,
+          screenType: isRegular ? undefined : ticket.screentype,
+          seatType: isRegular ? undefined : "Premium",
+        };
+  
+        console.log(`Payload for ticket #${i + 1}:`, payload);
+  
+        const response = await fetch("http://localhost:3001/api/ticket", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+  
+        const text = await response.text();
+        console.log(`Raw response for ticket #${i + 1}:`, text);
+  
+        if (!response.ok) {
+          throw new Error(`Server responded with status ${response.status}`);
+        }
+  
+        try {
+          return JSON.parse(text);
+        } catch (parseError) {
+          console.error("JSON parsing failed:", parseError);
+          throw new Error("Invalid JSON returned from server.");
+        }
+      });
+  
+      await Promise.all(promises);
+      alert("Purchase successful! Your tickets have been booked.");
+      navigate("/users");
+    } catch (err) {
+      console.error("Purchase failed:", err);
+      alert("Failed to complete the purchase.");
+    }
+  };
+  
 
   const handleSeatDeselection = (seat, type) => {
     const seatObject = seat.seat
@@ -396,6 +468,7 @@ const BookTicketPage = () => {
               if (allChosen) {
                 return (
                   <div className="flex flex-col items-center space-y-4 mt-8 w-full">
+                    <CardTitle className="text-xl">Select a Payment Method</CardTitle>
                     {availablePayments.length === 0 ? (
                       <>
                         {!showAddOptions ? (
