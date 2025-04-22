@@ -40,8 +40,8 @@ ticketRouter.post("/", authenticateToken, async (req, res) => {
         await client.query(
           `INSERT INTO REGULAR 
            (Purchase_date, Recliner_seat, Price, Movie_time, Theatre_location,
-            Auditorium_number, Seat_ID, Payment_id, Customer_id, Card_number)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+            Auditorium_number, Seat_ID, Payment_id, Customer_id, Card_number, Movie_name)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
           [
             purchaseDate,
             reclinerSeat,
@@ -53,14 +53,15 @@ ticketRouter.post("/", authenticateToken, async (req, res) => {
             paymentId,
             customerId,
             cardNumber,
+            req.body.movieName, // movieName added
           ]
         );
-      } else if (ticketType === "premium") {
+      }else if (ticketType === "premium") {
         await client.query(
           `INSERT INTO PREMIUM 
            (Price, Movie_time, Purchase_date, Screen_type, Seat_type,
-            Theatre_location, Auditorium_number, Seat_id, Payment_id, Customer_id, Card_number)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+            Theatre_location, Auditorium_number, Seat_id, Payment_id, Customer_id, Card_number, Movie_name)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
           [
             price,
             movieTime,
@@ -73,9 +74,10 @@ ticketRouter.post("/", authenticateToken, async (req, res) => {
             paymentId,
             customerId,
             cardNumber,
+            req.body.movieName, // movieName added
           ]
         );
-      } else {
+      }else {
         return res.status(400).json({ error: "Invalid ticket type." });
       }
   
@@ -99,12 +101,16 @@ ticketRouter.get("/", authenticateToken, async (req, res) => {
     const customerId = userRes.rows[0].customer_id;
 
     const regularTickets = await client.query(
-      `SELECT 'Regular' AS type, * FROM REGULAR WHERE Customer_id = $1`,
+      `SELECT 'Regular' AS type, Ticket_id, Purchase_date, Recliner_seat, Price, Movie_time,
+              Theatre_location, Auditorium_number, Seat_ID, Payment_id, Customer_id, Card_number, Movie_name
+       FROM REGULAR WHERE Customer_id = $1`,
       [customerId]
     );
 
     const premiumTickets = await client.query(
-      `SELECT 'Premium' AS type, * FROM PREMIUM WHERE Customer_id = $1`,
+      `SELECT 'Premium' AS type, Ticket_id, Price, Movie_time, Purchase_date, Screen_type, Seat_type,
+              Theatre_location, Auditorium_number, Seat_id, Payment_id, Customer_id, Card_number, Movie_name
+       FROM PREMIUM WHERE Customer_id = $1`,
       [customerId]
     );
 
