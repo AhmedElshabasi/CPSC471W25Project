@@ -73,7 +73,7 @@ userRouter.post("/", async (req, res, next) => {
     const result = await client.query(
       `INSERT INTO CUSTOMER (First_name, Last_name, Email_address, Username, Phone_number, Password) 
        VALUES ($1, $2, $3, $4, $5, $6) 
-       RETURNING Customer_id, Username, First_name, Last_name, Email_address, Phone_number`
+       RETURNING Customer_id, Username, First_name, Last_name, Email_address, Phone_number`,
       [firstname.trim(), lastname.trim(), email.trim(), username.trim(), phonenum, hashedPassword]
     );
 
