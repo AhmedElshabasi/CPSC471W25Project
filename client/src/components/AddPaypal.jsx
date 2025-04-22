@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 
 const AddPaypal = () => {
   const [email, setEmail] = useState("");
@@ -12,8 +12,10 @@ const AddPaypal = () => {
   const [cardNumber, setCardNumber] = useState("");
   const [formError, setFormError] = useState("");
   const [success, setSuccess] = useState(false);
-
   const navigate = useNavigate();
+
+  const location = useLocation();
+  const from = location.state?.from || "/users";
 
   const handleAddPaypal = async () => {
     if (!email || !password || !cardNumber) {
@@ -56,7 +58,7 @@ const AddPaypal = () => {
 
       setSuccess(true);
       setTimeout(() => {
-        navigate("/users");
+        navigate(from);
       }, 1500);
 
       setEmail("");

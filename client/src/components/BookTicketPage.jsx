@@ -80,7 +80,26 @@ const BookTicketPage = () => {
   const [showAddOptions, setShowAddOptions] = useState(false);
   const navigate = useNavigate();
 
-
+  useEffect(() => {
+    const savedState = localStorage.getItem("bookingState");
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        setSelectedTime(parsed.selectTime || "12:00 AM");
+        setRegularQuantity(parsed.regularQuantity || []);
+        setPremiumQuantity(parsed.premiumQuantity || []);
+        setTotalTickets(parsed.totalTickets || []);
+        setSelectedSeatsStandard(parsed.selectedSeatsStandard || []);
+        setSelectedSeats4K(parsed.selectedSeats4K || []);
+        setSelectedSeatsIMAX(parsed.selectedSeatsIMAX || []);
+        setSelectedSeats3D(parsed.selectedSeats3D || []);
+        setPremiumType(parsed.premiumType || "4K-HDR");
+        localStorage.removeItem("bookingState");
+      } catch (e) {
+        console.error("Failed to restore booking state:", e);
+      }
+    }
+  }, []);  
 
   useEffect(() => {
     const allChosen = totalTickets.length > 0 && totalTickets.every(t => t.seatChosen);
@@ -477,8 +496,42 @@ const BookTicketPage = () => {
                           </Button>
                         ) : (
                           <div className="flex gap-4">
-                            <Button onClick={() => navigate("/payment/add-card")}>Add Card</Button>
-                            <Button onClick={() => navigate("/payment/add-paypal")}>Add PayPal</Button>
+                            <Button onClick={() => {
+                              localStorage.setItem("bookingState", JSON.stringify({
+                                movieName,
+                                date,
+                                location,
+                                selectedTime: selectTime,
+                                regularQuantity,
+                                premiumQuantity,
+                                totalTickets,
+                                selectedSeatsStandard,
+                                selectedSeats4K,
+                                selectedSeatsIMAX,
+                                selectedSeats3D,
+                              }));                              
+
+                              navigate("/payment/add-card", {
+                                state: { from: reactLocation.pathname + reactLocation.search },
+                              });}}>Add Card</Button>
+                            <Button onClick={() => {
+                              localStorage.setItem("bookingState", JSON.stringify({
+                                movieName,
+                                date,
+                                location,
+                                selectedTime: selectTime,
+                                regularQuantity,
+                                premiumQuantity,
+                                totalTickets,
+                                selectedSeatsStandard,
+                                selectedSeats4K,
+                                selectedSeatsIMAX,
+                                selectedSeats3D,
+                              }));                              
+                              navigate("/payment/add-paypal", {
+                                state: { from: reactLocation.pathname + reactLocation.search },
+                              });
+                              }}>Add PayPal</Button>
                           </div>
                         )}
                       </>
@@ -526,8 +579,41 @@ const BookTicketPage = () => {
                           </Button>
                           {showAddOptions && (
                             <div className="flex gap-4 mt-4">
-                              <Button onClick={() => navigate("/payment/add-card")}>Add Card</Button>
-                              <Button onClick={() => navigate("/payment/add-paypal")}>Add PayPal</Button>
+                              <Button onClick={() => {
+                                localStorage.setItem("bookingState", JSON.stringify({
+                                  movieName,
+                                  date,
+                                  location,
+                                  selectedTime: selectTime,
+                                  regularQuantity,
+                                  premiumQuantity,
+                                  totalTickets,
+                                  selectedSeatsStandard,
+                                  selectedSeats4K,
+                                  selectedSeatsIMAX,
+                                  selectedSeats3D,
+                                }));
+                                
+                                navigate("/payment/add-card", {
+                                  state: { from: reactLocation.pathname + reactLocation.search },});}}>Add Card</Button>
+                              <Button onClick={() => {
+                                localStorage.setItem("bookingState", JSON.stringify({
+                                  movieName,
+                                  date,
+                                  location,
+                                  selectedTime: selectTime,
+                                  regularQuantity,
+                                  premiumQuantity,
+                                  totalTickets,
+                                  selectedSeatsStandard,
+                                  selectedSeats4K,
+                                  selectedSeatsIMAX,
+                                  selectedSeats3D,
+                                }));
+                                
+                                navigate("/payment/add-paypal", {
+                                  state: { from: reactLocation.pathname + reactLocation.search },
+                                });}}>Add PayPal</Button>
                             </div>
                           )}
                         </div>
