@@ -26,6 +26,17 @@ import { Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import { useNavigate } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 
 const BookTicketPage = () => {
@@ -450,10 +461,75 @@ const BookTicketPage = () => {
 
                         {/* Purchase button only shows once payment selected */}
                         {selectedPayment && (
-                          <Button className="mt-6" onClick={handlePurchase}>
-                            Confirm & Purchase Tickets
-                          </Button>
-                        )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button className="mt-6">
+                              Purchase Tickets
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="max-w-2xl">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Review Your Order</AlertDialogTitle>
+                              <AlertDialogDescription className="space-y-4">
+
+                                {/* Movie Info */}
+                                <div>
+                                  <p><strong>Movie:</strong> {movieName}</p>
+                                  <p><strong>Date:</strong> {date}</p>
+                                  <p><strong>Time:</strong> {selectTime}</p>
+                                  <p><strong>Location:</strong> {location}</p>
+                                </div>
+
+                                {/* Ticket Info */}
+                                <div className="mt-4">
+                                  <strong>Tickets:</strong>
+                                  <ul className="list-disc pl-6">
+                                    {totalTickets.map((ticket, idx) => (
+                                      <li key={idx}>
+                                        {ticket.ticketType} — {ticket.screentype}, Seat: {ticket.seatChoice}, Auditorium: {ticket.auditorium}, Time: {ticket.time}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+
+                                {/* Payment Info */}
+                                <div className="mt-4">
+                                  <strong>Payment Method:</strong>
+                                  <div className="ml-2">
+                                    {(() => {
+                                      const pay = availablePayments.find(p => p.payment_id === selectedPayment);
+                                      if (!pay) return "N/A";
+                                      return (
+                                        <>
+                                          {pay.type === "card" ? (
+                                            <>
+                                              {pay.details.card_type} •••• {pay.details.last4}<br />
+                                              {pay.details.card_holder}<br />
+                                              Expires: {new Date(pay.details.expiration_date).toLocaleDateString("en-GB")}
+                                            </>
+                                          ) : (
+                                            <>
+                                              {pay.details.email_address}<br />
+                                              {pay.details.phone_number || ""}
+                                            </>
+                                          )}
+                                        </>
+                                      );
+                                    })()}
+                                  </div>
+                                </div>
+
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={handlePurchase}>
+                                Confirm and Purchase Tickets
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                       </>
                     )}
                   </div>
