@@ -325,7 +325,6 @@ const handleRefund = async (ticketId, ticketType) => {
                     )}
                   </div>
                   <div className="flex gap-2">
-                  <Button variant="outline">Modify</Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button>Refund</Button>
