@@ -275,6 +275,7 @@ const BookTicketPage = () => {
           cardNumber: cardNumber,
           screenType: isRegular ? undefined : ticket.screentype,
           seatType: isRegular ? undefined : "Premium",
+          movieName: movieName,
         };
   
         console.log(`Payload for ticket #${i + 1}:`, payload);
