@@ -61,7 +61,7 @@ const BookTicketPage = () => {
   const [IMAXrows, setRowsIMAX] = useState(rows)
   const [rows3D, setRows3D] = useState(rows)
   const [selectTime, setSelectedTime] = useState("12:00 AM")
-  const navigate = Navigate()
+
 
   const genrateTime = () => {
     const setupTime = []
