@@ -39,6 +39,7 @@ const AdminHomePage = () => {
   const [movies, setMovies] = useState([]);
   const [admins, setAdmins] = useState([]);
   const [movieActors, setMovieActors] = useState([]);
+  const [reviews, setReviews] = useState([]);
 
   const [theatreLocation, setTheatreLocation] = useState("");
   const [theatrePhone, setTheatrePhone] = useState("");
@@ -75,6 +76,7 @@ const AdminHomePage = () => {
   const [deleteMovieName, setDeleteMovieName] = useState("");
   const [deleteAdminUsername, setDeleteAdminUsername] = useState("");
   const [deleteActorMovie, setDeleteActorMovie] = useState("");
+  const [deleteUserRating, setDeleteUserRating] = useState("");
 
   const [dataRefresh, setDataRefresh] = useState(false);
 
@@ -203,6 +205,26 @@ const AdminHomePage = () => {
     }
   };
 
+  const retrieveRatings = async () => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/userRating/all`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.log("Retrieving User Reviews Failed");
+        return;
+      }
+
+      return data;
+    } catch (error) {
+      console.error("User rating error:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchAdmins = async () => {
       try {
@@ -263,6 +285,18 @@ const AdminHomePage = () => {
       }
     };
     fetchMovies();
+  }, [dataRefresh]);
+
+  useEffect(() => {
+    const fetchRatings = async () => {
+      try {
+        const data = await retrieveRatings();
+        if (data) setReviews(data.rows);
+      } catch (error) {
+        console.error("Error fetching movie actors:", error.message);
+      }
+    };
+    fetchRatings();
   }, [dataRefresh]);
 
   const resetStatusMessages = () => {
@@ -716,6 +750,35 @@ const AdminHomePage = () => {
     } catch (error) {
       console.error("Delete movie actor error:", error);
       alert("Unexpected error deleting movie actor.");
+    }
+  };
+
+  const handleDeleteRating = async (comment_id) => {
+    if (adminDetails.permissions !== "Comment Management") {
+      return alert("You do not have permission to delete user ratings.");
+    }
+
+    try {
+      const res = await fetch(
+        "http://localhost:3001/api/userRating/delete/rating",
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ comment_id }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setDataRefresh((prev) => !prev);
+        alert("Review deleted successfully.");
+      } else {
+        alert(data.error || "Failed to delete review.");
+      }
+    } catch (error) {
+      console.error("Delete user rating error:", error);
+      alert("Unexpected error deleting review.");
     }
   };
 
@@ -1175,6 +1238,56 @@ const AdminHomePage = () => {
                               variant="destructive"
                               onClick={() =>
                                 handleDeleteMovieActor(actor.name, actor.actor)
+                              }
+                            >
+                              Delete
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="space-y-2 mt-8">
+                <p className="text-lg font-bold">Delete User Rating</p>
+                <Input
+                  placeholder="Search by Username"
+                  value={deleteUserRating}
+                  onChange={(e) => setDeleteUserRating(e.target.value)}
+                />
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[30%]">Movie</TableHead>
+                      <TableHead className="w-[30%]">User</TableHead>
+                      <TableHead className="w-[20%]">Rating</TableHead>
+                      <TableHead className="w-[20%] text-center">
+                        Action
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {reviews
+                      .filter(
+                        (review) =>
+                          deleteUserRating.trim() !== "" &&
+                          review.username
+                            .toLowerCase()
+                            .includes(deleteUserRating.toLowerCase())
+                      )
+                      .map((review, index) => (
+                        <TableRow
+                          key={`${review.username}-${review.movie_name}-${review.rating}-${index}`}
+                        >
+                          <TableCell>{review.movie_name}</TableCell>
+                          <TableCell>{review.username}</TableCell>
+                          <TableCell>{review.rating}</TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              variant="destructive"
+                              onClick={() =>
+                                handleDeleteRating(review.comment_id)
                               }
                             >
                               Delete

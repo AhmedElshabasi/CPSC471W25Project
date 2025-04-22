@@ -4,15 +4,13 @@ import client from "../index.js";
 const userRatingRouter = express.Router();
 
 userRatingRouter.post("/add/rating", async (req, res) => {
-  const { movie_name, username, rating } = req.body;
+  const { movie_name, username, rating, date } = req.body;
 
   if (!movie_name || !username || !rating) {
     return res.status(400).json({ error: "Missing required fields." });
   }
 
   try {
-    const date = new Date().toISOString().split("T")[0];
-
     const idResult = await client.query(
       `SELECT MAX(Comment_id) as max_id FROM USER_RATING`
     );
@@ -47,6 +45,19 @@ userRatingRouter.get("/movie", async (req, res) => {
     res.status(200).json({ reviews: result.rows });
   } catch (error) {
     console.error("Error fetching reviews:", error);
+    res.status(500).json({ error: "Server error." });
+  }
+});
+
+userRatingRouter.get("/all", async (req, res) => {
+  try {
+    const result = await client.query(
+      `SELECT * FROM USER_RATING ORDER BY Date DESC`
+    );
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching all reviews:", error);
     res.status(500).json({ error: "Server error." });
   }
 });

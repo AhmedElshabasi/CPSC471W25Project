@@ -37,6 +37,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "../AuthContext";
 
 const TicketPage = ({ movieName }) => {
   const [date, setDate] = useState(new Date());
@@ -55,6 +56,7 @@ const TicketPage = ({ movieName }) => {
   const [reviews, setReviews] = useState([]);
   const [comment, setComment] = useState("");
   const [dataRefresh, setDataRefresh] = useState(false);
+  const { user } = useAuth();
 
   // useEffect on fetching movies
   useEffect(() => {
@@ -114,7 +116,7 @@ const TicketPage = ({ movieName }) => {
     };
 
     fetchReviews();
-  }, [[dataRefresh, movieData]]);
+  }, [[dataRefresh]]);
 
   const retrieveMovie = async () => {
     try {
@@ -192,7 +194,45 @@ const TicketPage = ({ movieName }) => {
     }
   };
 
-  const handlePostComment = async () => {};
+  const handlePostComment = async () => {
+    const token = localStorage.getItem("token");
+    const selectedDate = String(date).slice(4, 15);
+
+    if (!token) {
+      navigate(`/login`);
+      return;
+    }
+
+    if (!comment.trim()) {
+      alert("Please enter your experience before submitting.");
+      return;
+    }
+
+    try {
+      const result = await fetch(
+        "http://localhost:3001/api/userRating/add/rating",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            movie_name: movieData.name,
+            username: user.username,
+            rating: comment,
+            date: selectedDate,
+          }),
+        }
+      );
+
+      if (result.ok) {
+        setDataRefresh((prev) => !prev);
+        setComment("");
+        alert("Successfully added review!");
+      }
+    } catch (error) {
+      console.error("Could not add review", error);
+      alert("An error occurred while adding your review.");
+    }
+  };
 
   return (
     <div className="w-full h-mvh flex justify-center items-center py-[20pt]">
@@ -249,7 +289,7 @@ const TicketPage = ({ movieName }) => {
                         <div key={idx}>
                           <div className="mb-1">
                             <p className="text-sm font-semibold text-primary">
-                              {review.username} — {review.date}
+                              {review.username} — {review.date.split("T")[0]}
                             </p>
                             <p className="text-base italic text-muted-foreground">
                               “{review.rating}”
