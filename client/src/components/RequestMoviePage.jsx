@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 const RequestMoviePage = ({ customer_id }) => {
-  const params = useParams();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const customerId = params.get("customer-id");
   const navigate = useNavigate();
 
   const [movies, setMovies] = useState([]);
@@ -69,7 +72,7 @@ const RequestMoviePage = ({ customer_id }) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customer_id: params.id,
+          customer_id: customerId,
           movie_name: matchedMovie.name,
         }),
       });

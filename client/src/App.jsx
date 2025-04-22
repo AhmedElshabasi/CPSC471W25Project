@@ -34,7 +34,7 @@ function App() {
               <Route path="/signUp" element={<SignUpPage />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/request-movie/:id" element={<RequestMoviePage />} />
+              <Route path="/request-movie" element={<RequestMoviePage />} />
               <Route path="/no-results" element={<NoResultsPage />} />
               <Route
                 path="/admin/home/:id"
