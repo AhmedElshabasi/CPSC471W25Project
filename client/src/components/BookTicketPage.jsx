@@ -23,10 +23,13 @@ import { BsBadgeHdFill } from "react-icons/bs";
 import TheatrePreview from "./TheatrePreview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useAuth } from "../AuthContext";
+import { useNavigate } from "react-router-dom";
 
 
 const BookTicketPage = () => {
-
+  const { token } = useAuth();
   const rows = [
     {row: 'A', seatsLeft:['NB', 'NB'], seatsMiddle:['NB','NBW','NBWC','NB','NB',"NB", 'NBW','NBWC', "NB"], seatsRight:["NB","NB"]},
     {row: 'B', seatsLeft:['NB','NB'], seatsMiddle:['NB','NB','NB','NB','NB',"NB", "NB", "NB", "NB"], seatsRight:["NB","NB"]},
@@ -61,7 +64,72 @@ const BookTicketPage = () => {
   const [IMAXrows, setRowsIMAX] = useState(rows)
   const [rows3D, setRows3D] = useState(rows)
   const [selectTime, setSelectedTime] = useState("12:00 AM")
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [availablePayments, setAvailablePayments] = useState([]);
+  const [showAddOptions, setShowAddOptions] = useState(false);
+  const navigate = useNavigate();
 
+
+
+  useEffect(() => {
+    const allChosen = totalTickets.length > 0 && totalTickets.every(t => t.seatChosen);
+    if (allChosen && token) {
+      fetchAvailablePayments();
+    }
+  }, [totalTickets, token]);
+  
+  const fetchAvailablePayments = async () => {
+    try {
+      const res = await fetch("http://localhost:3001/api/payment", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      const data = await res.json();
+  
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to fetch payments");
+      }
+  
+      const { payments = [], cards = [], paypals = [] } = data;
+  
+      const merged = payments.map((payment) => {
+        const card = cards.find((c) => c.payment_id === payment.payment_id);
+        const paypal = paypals.find((p) => p.payment_id === payment.payment_id);
+  
+        if (card) {
+          return {
+            type: "card",
+            payment_id: payment.payment_id,
+            details: {
+              card_holder: card.card_holder,
+              card_type: card.card_type,
+              expiration_date: card.expiration_date,
+              last4: payment.card_number?.toString().slice(-4) || "****",
+            },
+          };
+        }
+  
+        if (paypal) {
+          return {
+            type: "paypal",
+            payment_id: payment.payment_id,
+            details: {
+              email_address: paypal.email_address,
+              phone_number: paypal.phone_number,
+            },
+          };
+        }
+  
+        return null; // fallback
+      }).filter(Boolean);
+  
+      setAvailablePayments(merged);
+    } catch (err) {
+      console.error("Fetch payment error:", err);
+    }
+  };  
 
   const genrateTime = () => {
     const setupTime = []
@@ -310,15 +378,88 @@ const BookTicketPage = () => {
               </div>
             </div>          
           </CardContent>
-          <CardFooter className="flex justify-center items-center mt-8">
-            {totalTickets.length === 0 ? (null): (() => {
+          <CardFooter className="flex flex-col justify-center items-center mt-8 gap-4">
+            {totalTickets.length === 0 ? null : (() => {
               const allChosen = totalTickets.every(ticket => ticket.seatChosen);
-              if(allChosen){
-                return <Button onClick={() => handlePurchase()}>Purchase Selected Tickets</Button>
+
+              if (allChosen) {
+                return (
+                  <div className="flex flex-col items-center space-y-4 mt-8 w-full">
+                    {availablePayments.length === 0 ? (
+                      <>
+                        {!showAddOptions ? (
+                          <Button variant="outline" onClick={() => setShowAddOptions(true)}>
+                            <Plus className="w-4 h-4 mr-2" /> Add Payment Method
+                          </Button>
+                        ) : (
+                          <div className="flex gap-4">
+                            <Button onClick={() => navigate("/payment/add-card")}>Add Card</Button>
+                            <Button onClick={() => navigate("/payment/add-paypal")}>Add PayPal</Button>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 w-full">
+                          {availablePayments.map((pay) => (
+                            <Card
+                              key={pay.payment_id}
+                              className={`border p-4 cursor-pointer ${
+                                selectedPayment === pay.payment_id ? "ring-2 ring-blue-500" : ""
+                              }`}
+                              onClick={() => setSelectedPayment(pay.payment_id)}
+                            >
+                              <CardTitle className="text-base">
+                                {pay.type === "card" ? "Card" : "PayPal"}
+                              </CardTitle>
+                              <p className="text-sm mt-1">
+                                {pay.type === "card" ? (
+                                  <>
+                                    {pay.details.card_type} •••• {pay.details.last4}
+                                    <br />
+                                    {pay.details.card_holder}
+                                    <br />
+                                    Expires:{" "}
+                                    {pay.details.expiration_date
+                                      ? new Date(pay.details.expiration_date).toLocaleDateString("en-GB")
+                                      : "N/A"}
+                                  </>
+                                ) : (
+                                  <>
+                                    {pay.details.email_address}
+                                    <br />
+                                    {pay.details.phone_number || ""}
+                                  </>
+                                )}
+                              </p>
+                            </Card>
+                          ))}
+                        </div>
+
+                        <div className="pt-4">
+                          <Button onClick={() => setShowAddOptions(!showAddOptions)} variant="outline">
+                            {showAddOptions ? "Cancel" : "Add Another Payment Method"}
+                          </Button>
+                          {showAddOptions && (
+                            <div className="flex gap-4 mt-4">
+                              <Button onClick={() => navigate("/payment/add-card")}>Add Card</Button>
+                              <Button onClick={() => navigate("/payment/add-paypal")}>Add PayPal</Button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Purchase button only shows once payment selected */}
+                        {selectedPayment && (
+                          <Button className="mt-6" onClick={handlePurchase}>
+                            Confirm & Purchase Tickets
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                );
               }
-              else{
-                return null
-              }
+              return null;
             })()}
           </CardFooter>
         </Card>
