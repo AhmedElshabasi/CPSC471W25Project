@@ -22,6 +22,7 @@ import { FaUser } from "react-icons/fa";
 import { BsBadgeHdFill } from "react-icons/bs";
 import TheatrePreview from "./TheatrePreview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Navigate } from "react-router-dom";
 
 
 const BookTicketPage = () => {
@@ -60,6 +61,7 @@ const BookTicketPage = () => {
   const [IMAXrows, setRowsIMAX] = useState(rows)
   const [rows3D, setRows3D] = useState(rows)
   const [selectTime, setSelectedTime] = useState("12:00 AM")
+  const navigate = Navigate()
 
   const genrateTime = () => {
     const setupTime = []
@@ -81,13 +83,13 @@ const BookTicketPage = () => {
 
   const handleAdd = (type) => {
     if(type === 'regular'){
-      const newTicket = {number: regularQuantity.length+1, ticketType: 'Regular', seatChosen: false, seatChoice:"", screentype: "Standard", auditorium: "1"}
+      const newTicket = {number: regularQuantity.length+1, ticketType: 'Regular', seatChosen: false, seatChoice:"", screentype: "Standard", auditorium: "1", time:selectTime}
       setRegularQuantity([...regularQuantity, newTicket])
       setTotalTickets([...totalTickets, newTicket])
     }
     else{
       const auditoriumNum = premiumType === "4K-HDR" ? ("2") : premiumType === "IMAX" ? ("3") : premiumType === "3D" ? ("4") : null
-      const newTicket = {number: premiumQuantity.length+1, ticketType: 'Premium', seatChosen: false, seatChoice:"", screentype: premiumType, auditorium: auditoriumNum}
+      const newTicket = {number: premiumQuantity.length+1, ticketType: 'Premium', seatChosen: false, seatChoice:"", screentype: premiumType, auditorium: auditoriumNum, time: selectTime}
       setPremiumQuantity([...premiumQuantity, newTicket])
       setTotalTickets([...totalTickets, newTicket])
     }   
@@ -134,6 +136,11 @@ const BookTicketPage = () => {
       }
       return updated
     })
+  }
+
+  const handlePurchase = () => {
+    localStorage.setItem("totalTickets", totalTickets)
+  
   }
 
   const handleSeatDeselection = (seat, type) => {
@@ -238,7 +245,7 @@ const BookTicketPage = () => {
                       <CardHeader className="flex flex-col gap-[1px]">
                         <CardTitle className="text-md mb-[-8px]">{`Ticket Number: ${index+1}`}</CardTitle>
                         <CardDescription className="font-semibold mb-[30px]">{`${ticket.ticketType}, ${ticket.screentype}`}</CardDescription>
-                        <CardDescription className="font-semibold mb-[30px]">{selectTime}</CardDescription>
+                        <CardDescription className="font-semibold mb-[30px]">{ticket.time}</CardDescription>
                         <CardDescription className="font-semibold mb-[30px]">{`Auditorium: ${ticket.auditorium}`}</CardDescription>
                         <div className="mt-[10px]">
                         {!ticket.seatChosen ? ( <Button className="h-[20px] mt-[10px] w-fit" onClick={() => selectSeat(ticket.screentype)}>Select Seat</Button>) : (<p>{`Seat: ${ticket.seatChoice}`}</p>)}
@@ -252,7 +259,7 @@ const BookTicketPage = () => {
                 <Tabs
                   value={activeTab}
                   onValueChange={setActiveTab}
-                  defaultValue="regular"
+                  defaultValue="Standard"
                   className="w-fit flex flex-col items-center"
                 >
                   <TabsList className="mb-4">
@@ -307,7 +314,7 @@ const BookTicketPage = () => {
             {totalTickets.length === 0 ? (null): (() => {
               const allChosen = totalTickets.every(ticket => ticket.seatChosen);
               if(allChosen){
-                return <Button>Purchase Selected Tickets</Button>
+                return <Button onClick={() => handlePurchase()}>Purchase Selected Tickets</Button>
               }
               else{
                 return null
