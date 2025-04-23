@@ -42,6 +42,7 @@ const AdminHomePage = () => {
   const [reviews, setReviews] = useState([]);
   const [movieRequests, setMovieRequests] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [allTickets, setAllTickets] = useState([]);
 
   const [theatreLocation, setTheatreLocation] = useState("");
   const [theatrePhone, setTheatrePhone] = useState("");
@@ -332,6 +333,20 @@ const AdminHomePage = () => {
     };
     loadData();
   }, [dataRefresh]);
+
+  useEffect(() => {
+    const fetchAllTickets = async () => {
+      try {
+        const res = await fetch("http://localhost:3001/api/ticket/all");
+        const data = await res.json();
+        setAllTickets(data);
+      } catch (err) {
+        console.error("Failed to fetch tickets:", err);
+      }
+    };
+
+    fetchAllTickets();
+  }, []);
 
   const resetStatusMessages = () => {
     setTheatreError("");
@@ -934,12 +949,11 @@ const AdminHomePage = () => {
                     <p className="text-bold">Overview</p>
                   </CardHeader>
                   <CardContent className="flex flex-col gap-4 h-[330px] overflow-hidden">
-                    {/* Movie Requests */}
                     <div className="flex-1 min-h-0 flex flex-col">
                       <p className="text-sm font-semibold mb-1">
                         Movie Requests
                       </p>
-                      <div className="bg-muted rounded-md p-2 overflow-y-auto flex-1 border border-border">
+                      <div className="bg-black rounded-md p-2 overflow-y-auto flex-1 border border-border">
                         {movieRequests.length === 0 ? (
                           <p className="text-sm text-muted-foreground">
                             No requests yet.
@@ -985,14 +999,60 @@ const AdminHomePage = () => {
                         )}
                       </div>
                     </div>
-
-                    {/* Admin Actions */}
                   </CardContent>
                 </Card>
-                <Card className="w-1/2">
+                <Card className="w-1/2 bg-[#0e0e0e] text-white">
                   <CardHeader>
-                    <p className="text-bold">Recent Movie Bookings</p>
+                    <p className="font-semibold text-white">
+                      Recent Movie Bookings
+                    </p>
                   </CardHeader>
+                  <CardContent className="flex flex-col gap-4 h-[330px] overflow-hidden">
+                    <div className="flex-1 min-h-0 flex flex-col">
+                      <p className="text-sm font-semibold mb-1">All Tickets</p>
+                      <div className="bg-black rounded-md p-2 overflow-y-auto flex-1 border border-border">
+                        {allTickets.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">
+                            No tickets booked yet.
+                          </p>
+                        ) : (
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="text-left border-b border-border">
+                                <th className="py-1 pr-4">Customer ID</th>
+                                <th className="py-1 pr-4">Movie</th>
+                                <th className="py-1 pr-4">Type</th>
+                                <th className="py-1 pr-4">Theatre</th>
+                                <th className="py-1">Auditorium</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {allTickets.map((ticket, idx) => (
+                                <tr
+                                  key={idx}
+                                  className="border-b border-border"
+                                >
+                                  <td className="py-1 pr-4">
+                                    {ticket.customer_id}
+                                  </td>
+                                  <td className="py-1 pr-4 italic">
+                                    {ticket.movie_name}
+                                  </td>
+                                  <td className="py-1 pr-4">{ticket.type}</td>
+                                  <td className="py-1 pr-4">
+                                    {ticket.theatre_location}
+                                  </td>
+                                  <td className="py-1 pr-4">
+                                    {ticket.auditorium_number}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
                 </Card>
               </div>
             </TabsContent>
@@ -1443,7 +1503,11 @@ const AdminHomePage = () => {
                   </TableHeader>
                   <TableBody>
                     {theatres
-                      .filter(theatre => theatre.location.toLowerCase().includes(deleteTheatreLocation.toLowerCase()))
+                      .filter((theatre) =>
+                        theatre.location
+                          .toLowerCase()
+                          .includes(deleteTheatreLocation.toLowerCase())
+                      )
                       .map((theatre) => {
                         const loc = theatre.location;
                         return (
@@ -1454,32 +1518,49 @@ const AdminHomePage = () => {
                             <TableCell>
                               <Input
                                 placeholder="New Phone"
-                                onChange={(e) => theatre.newPhone = e.target.value}
+                                onChange={(e) =>
+                                  (theatre.newPhone = e.target.value)
+                                }
                               />
                             </TableCell>
                             <TableCell>
                               <Input
                                 placeholder="New Company"
-                                onChange={(e) => theatre.newCompany = e.target.value}
+                                onChange={(e) =>
+                                  (theatre.newCompany = e.target.value)
+                                }
                               />
                             </TableCell>
                             <TableCell className="text-center">
                               <Button
                                 onClick={async () => {
-                                  if (adminDetails.permissions !== "Theatre Management") return alert("No permission");
+                                  if (
+                                    adminDetails.permissions !==
+                                    "Theatre Management"
+                                  )
+                                    return alert("No permission");
                                   try {
-                                    const res = await fetch("http://localhost:3001/api/theatre/update/theatre", {
-                                      method: "PUT",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({
-                                        location: loc,
-                                        new_phone: theatre.newPhone || theatre.phone_number,
-                                        new_company: theatre.newCompany || theatre.company_name,
-                                      }),
-                                    });
+                                    const res = await fetch(
+                                      "http://localhost:3001/api/theatre/update/theatre",
+                                      {
+                                        method: "PUT",
+                                        headers: {
+                                          "Content-Type": "application/json",
+                                        },
+                                        body: JSON.stringify({
+                                          location: loc,
+                                          new_phone:
+                                            theatre.newPhone ||
+                                            theatre.phone_number,
+                                          new_company:
+                                            theatre.newCompany ||
+                                            theatre.company_name,
+                                        }),
+                                      }
+                                    );
                                     const data = await res.json();
                                     if (res.ok) {
-                                      setDataRefresh(prev => !prev);
+                                      setDataRefresh((prev) => !prev);
                                       alert("Theatre updated");
                                     } else alert(data.error);
                                   } catch (err) {
@@ -1519,45 +1600,79 @@ const AdminHomePage = () => {
                   </TableHeader>
                   <TableBody>
                     {movies
-                      .filter(movie => movie.name.toLowerCase().includes(deleteMovieName.toLowerCase()))
+                      .filter((movie) =>
+                        movie.name
+                          .toLowerCase()
+                          .includes(deleteMovieName.toLowerCase())
+                      )
                       .map((movie) => (
                         <TableRow key={movie.name}>
                           <TableCell>{movie.name}</TableCell>
                           <TableCell>
-                            <Input onChange={(e) => movie.newGenre = e.target.value} placeholder={movie.genre} />
+                            <Input
+                              onChange={(e) =>
+                                (movie.newGenre = e.target.value)
+                              }
+                              placeholder={movie.genre}
+                            />
                           </TableCell>
                           <TableCell>
-                            <Input onChange={(e) => movie.newRating = e.target.value} placeholder={movie.pg_rating} />
+                            <Input
+                              onChange={(e) =>
+                                (movie.newRating = e.target.value)
+                              }
+                              placeholder={movie.pg_rating}
+                            />
                           </TableCell>
                           <TableCell>
                             <Input
                               type="date"
-                              value={movie.newDate || new Date(movie.release_date).toISOString().split("T")[0]}
+                              value={
+                                movie.newDate ||
+                                new Date(movie.release_date)
+                                  .toISOString()
+                                  .split("T")[0]
+                              }
                               onChange={(e) => (movie.newDate = e.target.value)}
                             />
                           </TableCell>
                           <TableCell>
-                            <Input onChange={(e) => movie.newDesc = e.target.value} placeholder={movie.description} />
+                            <Input
+                              onChange={(e) => (movie.newDesc = e.target.value)}
+                              placeholder={movie.description}
+                            />
                           </TableCell>
                           <TableCell className="text-center">
                             <Button
                               onClick={async () => {
-                                if (adminDetails.permissions !== "Movie Listing Management") return alert("No permission");
+                                if (
+                                  adminDetails.permissions !==
+                                  "Movie Listing Management"
+                                )
+                                  return alert("No permission");
                                 try {
-                                  const res = await fetch("http://localhost:3001/api/movies/update/movie", {
-                                    method: "PUT",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({
-                                      name: movie.name,
-                                      genre: movie.newGenre || movie.genre,
-                                      pg_rating: movie.newRating || movie.pg_rating,
-                                      release_date: movie.newDate || movie.release_date,
-                                      description: movie.newDesc || movie.description,
-                                    }),
-                                  });
+                                  const res = await fetch(
+                                    "http://localhost:3001/api/movies/update/movie",
+                                    {
+                                      method: "PUT",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                      },
+                                      body: JSON.stringify({
+                                        name: movie.name,
+                                        genre: movie.newGenre || movie.genre,
+                                        pg_rating:
+                                          movie.newRating || movie.pg_rating,
+                                        release_date:
+                                          movie.newDate || movie.release_date,
+                                        description:
+                                          movie.newDesc || movie.description,
+                                      }),
+                                    }
+                                  );
                                   const data = await res.json();
                                   if (res.ok) {
-                                    setDataRefresh(prev => !prev);
+                                    setDataRefresh((prev) => !prev);
                                     alert("Movie updated");
                                   } else alert(data.error);
                                 } catch (err) {
@@ -1595,37 +1710,63 @@ const AdminHomePage = () => {
                   </TableHeader>
                   <TableBody>
                     {admins
-                      .filter(admin => admin.username.toLowerCase().includes(deleteAdminUsername.toLowerCase()))
+                      .filter((admin) =>
+                        admin.username
+                          .toLowerCase()
+                          .includes(deleteAdminUsername.toLowerCase())
+                      )
                       .map((admin) => (
                         <TableRow key={admin.admin_id}>
                           <TableCell>{admin.username}</TableCell>
                           <TableCell>
-                            <Input onChange={(e) => admin.newRole = e.target.value} placeholder={admin.role} />
+                            <Input
+                              onChange={(e) => (admin.newRole = e.target.value)}
+                              placeholder={admin.role}
+                            />
                           </TableCell>
                           <TableCell>
-                            <Input onChange={(e) => admin.newPermissions = e.target.value} placeholder={admin.permissions} />
+                            <Input
+                              onChange={(e) =>
+                                (admin.newPermissions = e.target.value)
+                              }
+                              placeholder={admin.permissions}
+                            />
                           </TableCell>
                           <TableCell>
-                            <Input onChange={(e) => admin.newPhone = e.target.value} placeholder={admin.phone_number} />
+                            <Input
+                              onChange={(e) =>
+                                (admin.newPhone = e.target.value)
+                              }
+                              placeholder={admin.phone_number}
+                            />
                           </TableCell>
                           <TableCell className="text-center">
                             <Button
                               onClick={async () => {
-                                if (adminDetails.role !== "Manager") return alert("No permission");
+                                if (adminDetails.role !== "Manager")
+                                  return alert("No permission");
                                 try {
-                                  const res = await fetch("http://localhost:3001/api/admin/update/admin", {
-                                    method: "PUT",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({
-                                      admin_id: admin.admin_id,
-                                      new_role: admin.newRole || admin.role,
-                                      new_permissions: admin.newPermissions || admin.permissions,
-                                      new_phone: admin.newPhone || admin.phone_number,
-                                    }),
-                                  });
+                                  const res = await fetch(
+                                    "http://localhost:3001/api/admin/update/admin",
+                                    {
+                                      method: "PUT",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                      },
+                                      body: JSON.stringify({
+                                        admin_id: admin.admin_id,
+                                        new_role: admin.newRole || admin.role,
+                                        new_permissions:
+                                          admin.newPermissions ||
+                                          admin.permissions,
+                                        new_phone:
+                                          admin.newPhone || admin.phone_number,
+                                      }),
+                                    }
+                                  );
                                   const data = await res.json();
                                   if (res.ok) {
-                                    setDataRefresh(prev => !prev);
+                                    setDataRefresh((prev) => !prev);
                                     alert("Admin updated");
                                   } else alert(data.error);
                                 } catch (err) {
@@ -1662,31 +1803,49 @@ const AdminHomePage = () => {
                   </TableHeader>
                   <TableBody>
                     {movieActors
-                      .filter(actor => actor.actor.toLowerCase().includes(deleteActorMovie.toLowerCase()))
+                      .filter((actor) =>
+                        actor.actor
+                          .toLowerCase()
+                          .includes(deleteActorMovie.toLowerCase())
+                      )
                       .map((actor) => (
                         <TableRow key={`${actor.name}-${actor.actor}`}>
                           <TableCell>{actor.name}</TableCell>
                           <TableCell>{actor.actor}</TableCell>
                           <TableCell>
-                            <Input onChange={(e) => actor.newActor = e.target.value} placeholder="New Actor" />
+                            <Input
+                              onChange={(e) =>
+                                (actor.newActor = e.target.value)
+                              }
+                              placeholder="New Actor"
+                            />
                           </TableCell>
                           <TableCell className="text-center">
                             <Button
                               onClick={async () => {
-                                if (adminDetails.permissions !== "Movie Listing Management") return alert("No permission");
+                                if (
+                                  adminDetails.permissions !==
+                                  "Movie Listing Management"
+                                )
+                                  return alert("No permission");
                                 try {
-                                  const res = await fetch("http://localhost:3001/api/movies/update/actor", {
-                                    method: "PUT",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({
-                                      movie_name: actor.name,
-                                      old_actor: actor.actor,
-                                      new_actor: actor.newActor,
-                                    }),
-                                  });
+                                  const res = await fetch(
+                                    "http://localhost:3001/api/movies/update/actor",
+                                    {
+                                      method: "PUT",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                      },
+                                      body: JSON.stringify({
+                                        movie_name: actor.name,
+                                        old_actor: actor.actor,
+                                        new_actor: actor.newActor,
+                                      }),
+                                    }
+                                  );
                                   const data = await res.json();
                                   if (res.ok) {
-                                    setDataRefresh(prev => !prev);
+                                    setDataRefresh((prev) => !prev);
                                     alert("Actor updated");
                                   } else alert(data.error);
                                 } catch (err) {
