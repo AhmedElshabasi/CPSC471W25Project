@@ -245,22 +245,44 @@ const BookTicketPage = () => {
       return;
     }
   
-    console.log("Starting purchase...");
-    console.log("Total Tickets:", totalTickets);
-    console.log("Selected Payment:", selectedPayment);
-  
     try {
       const promises = totalTickets.map(async (ticket, i) => {
         const isRegular = ticket.ticketType === "Regular";
-  
-        const seatIdExtract = ticket.seatChoice?.match(/\d+/)?.[0];
-        const seatId = seatIdExtract ? parseInt(seatIdExtract) : i + 1; // fallback if parsing fails
-
         const selected = availablePayments.find(p => p.payment_id === selectedPayment);
         const cardNumber = selected?.fullCardNumber;
+  
         if (!cardNumber) {
           throw new Error("Missing card number for selected payment.");
         }
+  
+        const seatData = {
+          theatreLocation: location,
+          auditoriumNumber: parseInt(ticket.auditorium),
+          number: ticket.seatChoice.number,
+          row: ticket.seatChoice.rowNumber,
+          status: true,
+        };
+  
+        console.log(`🪑 Creating seat for ticket #${i + 1}`, seatData);
+  
+        const seatRes = await fetch("http://localhost:3001/api/ticket/seat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(seatData),
+        });
+  
+        const seatResText = await seatRes.text();
+        console.log(`🪑 Seat API Response (raw) #${i + 1}:`, seatResText);
+  
+        if (!seatRes.ok) {
+          throw new Error(`Seat creation failed: ${seatResText}`);
+        }
+  
+        const seatResult = JSON.parse(seatResText);
+        const seatId = seatResult.seatId || seatResult.Seat_id;
   
         const payload = {
           ticketType: isRegular ? "regular" : "premium",
@@ -272,15 +294,13 @@ const BookTicketPage = () => {
           auditoriumNumber: parseInt(ticket.auditorium),
           seatId,
           paymentId: selectedPayment,
-          cardNumber: cardNumber,
+          cardNumber,
           screenType: isRegular ? undefined : ticket.screentype,
           seatType: isRegular ? undefined : "Premium",
           movieName: movieName,
         };
   
-        console.log(`Payload for ticket #${i + 1}:`, payload);
-  
-        const response = await fetch("http://localhost:3001/api/ticket", {
+        const ticketRes = await fetch("http://localhost:3001/api/ticket", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -289,19 +309,13 @@ const BookTicketPage = () => {
           body: JSON.stringify(payload),
         });
   
-        const text = await response.text();
-        console.log(`Raw response for ticket #${i + 1}:`, text);
+        const ticketText = await ticketRes.text();
   
-        if (!response.ok) {
-          throw new Error(`Server responded with status ${response.status}`);
+        if (!ticketRes.ok) {
+          throw new Error(`Ticket creation failed: ${ticketText}`);
         }
   
-        try {
-          return JSON.parse(text);
-        } catch (parseError) {
-          console.error("JSON parsing failed:", parseError);
-          throw new Error("Invalid JSON returned from server.");
-        }
+        return JSON.parse(ticketText);
       });
   
       await Promise.all(promises);
@@ -650,7 +664,7 @@ const BookTicketPage = () => {
                                   <ul className="list-disc pl-6">
                                     {totalTickets.map((ticket, idx) => (
                                       <li key={idx}>
-                                        {ticket.ticketType} — {ticket.screentype}, Seat: {ticket.seatChoice}, Auditorium: {ticket.auditorium}, Time: {ticket.time}
+                                        {ticket.ticketType} — {ticket.screentype}, Seat: {ticket.seatChoice?.row}-{ticket.seatChoice?.number}, Auditorium: {ticket.auditorium}, Time: {ticket.time}
                                       </li>
                                     ))}
                                   </ul>
