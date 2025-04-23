@@ -47,6 +47,10 @@ const TheatrePreview = ({rows, onSeatSelect, onSeatDeselect, selectedSeats, tota
     };
   
     const seatStatus = rowData[section][seatIndex];
+
+    if (seatStatus === "O") {
+      return; // Don't allow selection of occupied seats
+}
   
     if (["NB", "NBW", "NBWC"].includes(seatStatus)) {
       if (selectedSeats.length > totalTickets - 1) {
@@ -101,6 +105,12 @@ const TheatrePreview = ({rows, onSeatSelect, onSeatDeselect, selectedSeats, tota
                     onClick={() => handleSeatClick(rowIndex, 'seatsLeft', index)}
                     key={`${row}-seatsLeft-${index}`}
                   ></div>
+                ) : seat === "O" ? (
+                  <FaUser
+                    className="w-[30px] h-[30px] fill-slate-500"
+                    key={`${row}-seatsLeft-${index}`}
+                    onClick={() => handleSeatClick(rowIndex, 'seatsLeft', index)}
+                  />
                 ) : seat === "B" ? (
                   <FaUser
                     className="w-[30px] h-[30px] fill-green-500"
@@ -119,10 +129,17 @@ const TheatrePreview = ({rows, onSeatSelect, onSeatDeselect, selectedSeats, tota
                     onClick={() => handleSeatClick(rowIndex, 'seatsMiddle', index)}
                     key={`${row}-seats-middle-${index}`}
                   ></div>
+                )
+                : seat === "O" ? (
+                  <FaUser
+                    className="w-[30px] h-[30px] fill-slate-500"
+                    key={`${row}-seats-middle-${index}`}
+                    onClick={() => handleSeatClick(rowIndex, 'seatsMiddle', index)}
+                  />
                 ) : seat === "B" ? (
                   <FaUser
                     className="w-[30px] h-[30px] fill-green-500"
-                    key={`${row}-seatsmiddle-${index}`}
+                    key={`${row}-seats-middle-${index}`}
                     onClick={() => handleSeatClick(rowIndex, 'seatsMiddle', index)}
                   />
                 ) : null
@@ -137,6 +154,12 @@ const TheatrePreview = ({rows, onSeatSelect, onSeatDeselect, selectedSeats, tota
                     key={`${row}-seatsright-${index}`}
                     onClick={() => handleSeatClick(rowIndex, 'seatsRight', index)}
                   ></div>
+                ): seat === "O" ? (
+                  <FaUser
+                    className="w-[30px] h-[30px] fill-slate-500"
+                    key={`${row}-seats-right-${index}`}
+                    onClick={() => handleSeatClick(rowIndex, 'seatsRight', index)}
+                  />
                 ) : seat === "B" ? (
                   <FaUser
                     className="w-[30px] h-[30px] fill-green-500"
@@ -167,6 +190,12 @@ const TheatrePreview = ({rows, onSeatSelect, onSeatDeselect, selectedSeats, tota
                     key={`${row}-seatsLeft-${index}`}
                     onClick={() => handleSeatClick(rowIndex, 'seatsLeft', index)}
                   ></div>
+                ): seat === "O" ? (
+                  <FaUser
+                    className="w-[30px] h-[30px] fill-slate-500"
+                    key={`${row}-seatsLeft-${index}`}
+                    onClick={() => handleSeatClick(rowIndex, 'seatsLeft', index)}
+                  />
                 ) : seat === "B" ? (
                   <FaUser
                     className="w-[30px] h-[30px] fill-green-500"
@@ -182,13 +211,19 @@ const TheatrePreview = ({rows, onSeatSelect, onSeatDeselect, selectedSeats, tota
                 seat === "NB" ? (
                   <div
                     className="w-[30px] h-[30px] bg-blue-600 rounded-lg cursor-pointer"
-                    key={`${row}-seatsmiddle-${index}`}
+                    key={`${row}-seats-middle-${index}`}
                     onClick={() => handleSeatClick(rowIndex, 'seatsMiddle', index)}
                   ></div>
+                ): seat === "O" ? (
+                  <FaUser
+                    className="w-[30px] h-[30px] fill-slate-500"
+                    key={`${row}-seats-middle-${index}`}
+                    onClick={() => handleSeatClick(rowIndex, 'seatsMiddle', index)}
+                  />
                 ) : seat === "B" ? (
                   <FaUser
                     className="w-[30px] h-[30px] fill-green-500"
-                    key={`${row}-seatsmiddle-${index}`}
+                    key={`${row}-seats-middle-${index}`}
                     onClick={() => handleSeatClick(rowIndex, 'seatsMiddle', index)}
                   />
                 ) : null
@@ -203,6 +238,12 @@ const TheatrePreview = ({rows, onSeatSelect, onSeatDeselect, selectedSeats, tota
                     key={`${row}-seats-right-${index}`}
                     onClick={() => handleSeatClick(rowIndex, 'seatsRight', index)}
                   ></div>
+                ) : seat === "O" ? (
+                  <FaUser
+                    className="w-[30px] h-[30px] fill-slate-500"
+                    key={`${row}-seats-right-${index}`}
+                    onClick={() => handleSeatClick(rowIndex, 'seatsRight', index)}
+                  />
                 ) : seat === "B" ? (
                   <FaUser
                     className="w-[30px] h-[30px] fill-green-500"
@@ -233,6 +274,12 @@ const TheatrePreview = ({rows, onSeatSelect, onSeatDeselect, selectedSeats, tota
                     key={`${row}-seats-right-${index}`}
                     onClick={() => handleSeatClick(rowIndex, 'seatsLeft', index)}
                   ></div>
+                ): seat === "O" ? (
+                  <FaUser
+                    className="w-[30px] h-[30px] fill-slate-500"
+                    key={`${row}-seatsLeft-${index}`}
+                    onClick={() => handleSeatClick(rowIndex, 'seatsLeft', index)}
+                  />
                 ) : seat === "B" ? (
                   <FaUser
                     className="w-[30px] h-[30px] fill-green-500"
@@ -248,37 +295,43 @@ const TheatrePreview = ({rows, onSeatSelect, onSeatDeselect, selectedSeats, tota
                 seat === "NB" ? (
                   <div
                     className="w-[30px] h-[30px] bg-blue-600 rounded-lg cursor-pointer"
-                    key={`${row}-seats-right-${index}`}
+                    key={`${row}-seats-middle-${index}`}
                     onClick={() => handleSeatClick(rowIndex, 'seatsMiddle', index)}
                   ></div>
+                ) : seat === "O" ? (
+                  <FaUser
+                    className="w-[30px] h-[30px] fill-slate-500"
+                    key={`${row}-seats-middle-${index}`}
+                    onClick={() => handleSeatClick(rowIndex, 'seatsMiddle', index)}
+                  />
                 ) : seat === "B" ? (
                   <FaUser
                     className="w-[30px] h-[30px] fill-green-500"
-                    key={`${row}-seats-right-${index}`}
+                    key={`${row}-seats-middle-${index}`}
                     onClick={() => handleSeatClick(rowIndex, 'seatsMiddle', index)}
                   />
                 ) : seat === "NBW" ? (
                   <FaWheelchair
                     className="w-[30px] h-[30px] fill-white"
-                    key={`${row}-seats-right-${index}`}
+                    key={`${row}-seats-middle-${index}`}
                     onClick={() => handleSeatClick(rowIndex, 'seatsMiddle', index)}
                   />
                 ) : seat === "NBWC" ? (
                   <div
                     className="w-[30px] h-[30px] bg-blue-400 rounded-lg"
-                    key={`${row}-seats-right-${index}`}
+                    key={`${row}-seats-middle-${index}`}
                     onClick={() => handleSeatClick(rowIndex, 'seatsMiddle', index)}
                   ></div>
                 ) : seat === "BW" ? (
                   <FaWheelchair
                     className="w-[30px] h-[30px] fill-green-500"
-                    key={`${row}-seats-right-${index}`}
+                    key={`${row}-seats-middle-${index}`}
                     onClick={() => handleSeatClick(rowIndex, 'seatsMiddle', index)}
                   />
                 ) : seat === "BWC" ? (
                   <FaUser
                     className="w-[30px] h-[30px] fill-green-500"
-                    key={`${row}-seats-right-${index}`}
+                    key={`${row}-seats-middle-${index}`}
                     onClick={() => handleSeatClick(rowIndex, 'seatsMiddle', index)}
                   />
                 ) : null
@@ -293,7 +346,13 @@ const TheatrePreview = ({rows, onSeatSelect, onSeatDeselect, selectedSeats, tota
                     key={`${row}-seats-right-${index}`}
                     onClick={() => handleSeatClick(rowIndex, 'seatsRight', index)}
                   ></div>
-                ) : seat === "B" ? (
+                ): seat === "O" ? (
+                  <FaUser
+                    className="w-[30px] h-[30px] fill-slate-500"
+                    key={`${row}-seats-right-${index}`}
+                    onClick={() => handleSeatClick(rowIndex, 'seatsRight', index)}
+                  />
+                ): seat === "B" ? (
                   <FaUser
                     className="w-[30px] h-[30px] fill-green-500"
                     key={`${row}-seats-right-${index}`}

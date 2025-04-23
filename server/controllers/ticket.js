@@ -4,6 +4,41 @@ import { authenticateToken } from "../utils/middleware.js";
 
 const ticketRouter = express.Router();
 
+ticketRouter.get("/occupied-seats", async (req, res) => {
+  const { movieName, theatreLocation, movieTime } = req.query;
+
+  try {
+    // Query for regular tickets
+    const regularSeats = await client.query(
+      `SELECT s.Row, s.Number, s.Auditorium_number
+       FROM SEAT s
+       JOIN REGULAR r ON s.Seat_id = r.Seat_id
+       WHERE r.Movie_name = $1 
+         AND r.Theatre_location = $2 
+         AND r.Movie_time = $3`,
+      [movieName, theatreLocation, movieTime]
+    );
+
+    // Query for premium tickets
+    const premiumSeats = await client.query(
+      `SELECT s.Row, s.Number, s.Auditorium_number
+       FROM SEAT s
+       JOIN PREMIUM p ON s.Seat_id = p.Seat_id
+       WHERE p.Movie_name = $1 
+         AND p.Theatre_location = $2 
+         AND p.Movie_time = $3`,
+      [movieName, theatreLocation, movieTime]
+    );
+
+    const allOccupiedSeats = [...regularSeats.rows, ...premiumSeats.rows];
+    
+    res.json(allOccupiedSeats);
+  } catch (err) {
+    console.error("Error fetching occupied seats:", err);
+    res.status(500).json({ error: "Failed to fetch occupied seats" });
+  }
+});
+
 ticketRouter.post("/seat", authenticateToken, async (req, res) => {
   const {
     theatreLocation,

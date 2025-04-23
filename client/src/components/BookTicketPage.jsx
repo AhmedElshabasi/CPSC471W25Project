@@ -60,7 +60,7 @@ const BookTicketPage = () => {
 
   const company = queryParams.get("company")
   const date = queryParams.get("date")
-  const location = queryParams.get("location")
+  const location = queryParams.get("location")?.trim();
   const [regularQuantity,setRegularQuantity] = useState([])
   const [premiumQuantity, setPremiumQuantity] = useState([])
   const [totalTickets, setTotalTickets] = useState([])
@@ -79,6 +79,90 @@ const BookTicketPage = () => {
   const [availablePayments, setAvailablePayments] = useState([]);
   const [showAddOptions, setShowAddOptions] = useState(false);
   const navigate = useNavigate();
+
+  const fetchOccupiedSeats = async () => {
+    try {
+
+      const convertToTimeFormat = (timeStr) => {
+        const [time, meridian] = timeStr.split(" ");
+        let [hours, minutes] = time.split(":").map(Number);
+      
+        if (meridian === "PM" && hours !== 12) hours += 12;
+        if (meridian === "AM" && hours === 12) hours = 0;
+      
+        return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:00`;
+      };
+      const formattedTime = convertToTimeFormat(selectTime);
+      
+      const url = `http://localhost:3001/api/ticket/occupied-seats?movieName=${encodeURIComponent(movieName)}&theatreLocation=${encodeURIComponent(location)}&movieTime=${encodeURIComponent(formattedTime)}`;
+
+      const response = await fetch(url);     
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        markOccupiedSeats(data);
+      } else {
+        console.error("Error response from server:", data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch occupied seats:", err);
+    }
+  };
+
+  const markOccupiedSeats = (occupiedSeats) => {
+    
+    const markSeatInRow = (row, seatNumber) => {
+      const leftSize = row.seatsLeft?.length || 0;
+      const middleSize = row.seatsMiddle?.length || 0;
+      
+      
+      if (seatNumber < leftSize) {
+        if (row.seatsLeft[seatNumber] === "NB") row.seatsLeft[seatNumber] = "O";
+      } else if (seatNumber < leftSize + middleSize) {
+        const middleIndex = seatNumber - leftSize;
+        if (row.seatsMiddle[middleIndex] === "NB") row.seatsMiddle[middleIndex] = "O";
+      } else {
+        const rightIndex = seatNumber - leftSize - middleSize;
+        if (row.seatsRight[rightIndex] === "NB") row.seatsRight[rightIndex] = "O";
+      }
+    };
+  
+    // Process each auditorium
+    occupiedSeats.forEach(seat => {
+      const rowIndex = seat.row - 1; // Assuming row is 1-based in the DB
+      
+      if (seat.auditorium_number === 1) {
+        setStandardRows(prev => {
+          const newRows = [...prev];
+          if (newRows[rowIndex]) {
+            markSeatInRow(newRows[rowIndex], seat.number);
+          } else {
+            console.warn(`Row index ${rowIndex} not found in Standard rows`);
+          }
+          return newRows;
+        });
+      } else if (seat.auditorium_number === 2) {
+        setRows4K(prev => {
+          const newRows = [...prev];
+          if (newRows[rowIndex]) {
+            markSeatInRow(newRows[rowIndex], seat.number);
+          } else {
+            console.warn(`Row index ${rowIndex} not found in 4K rows`);
+          }
+          return newRows;
+        });
+      } 
+      // Add similar blocks for other auditorium numbers (3 for IMAX, 4 for 3D)
+    });
+  };
+
+// Call fetchOccupiedSeats when component mounts or time changes
+useEffect(() => {
+  if (movieName && location && selectTime && typeof selectTime === "string" && selectTime.includes(":")) {
+    fetchOccupiedSeats();
+  }
+}, [movieName, location, selectTime]);
 
   useEffect(() => {
     const savedState = localStorage.getItem("bookingState");
@@ -200,7 +284,6 @@ const BookTicketPage = () => {
     if(type === 'regular'){
       setRegularQuantity(prev => {
         const updated = prev.slice(0,-1)
-        console.log(updated)
 
         setTotalTickets(updated)
         return updated
@@ -263,8 +346,6 @@ const BookTicketPage = () => {
           status: true,
         };
   
-        console.log(`🪑 Creating seat for ticket #${i + 1}`, seatData);
-  
         const seatRes = await fetch("http://localhost:3001/api/ticket/seat", {
           method: "POST",
           headers: {
@@ -275,7 +356,6 @@ const BookTicketPage = () => {
         });
   
         const seatResText = await seatRes.text();
-        console.log(`🪑 Seat API Response (raw) #${i + 1}:`, seatResText);
   
         if (!seatRes.ok) {
           throw new Error(`Seat creation failed: ${seatResText}`);
