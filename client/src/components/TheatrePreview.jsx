@@ -25,66 +25,62 @@ const TheatrePreview = ({rows, onSeatSelect, onSeatDeselect, selectedSeats, tota
 
   const [theatrePreview, setTheatrePreview] = useState(rows)
 
-  const handleSeatClick = (rowIndex, section, seatNumber) => {
-
-    const selectedRow = theatrePreview[rowIndex].row
-    const selectedSeat = `${selectedRow}-${seatNumber}`
-    const seatStatus = theatrePreview[rowIndex][section][seatNumber]
-
-    if(seatStatus === "NB" | seatStatus ==="NBW" | seatStatus ==="NBWC"){
-
-      if(selectedSeats.length > totalTickets-1){
-        alert("You are trying to add more seats than you have selected. Remove previous seats to reselect.")
-        return 
-
-      }
-      console.log()
-      onSeatSelect && onSeatSelect({
-        seat: selectedSeat
-      })
-
+  const handleSeatClick = (rowIndex, section, seatIndex) => {
+    const rowData = theatrePreview[rowIndex];
+  
+    const leftSize = rowData.seatsLeft?.length || 0;
+    const middleSize = rowData.seatsMiddle?.length || 0;
+  
+    let globalSeatNumber;
+    if (section === "seatsLeft") {
+      globalSeatNumber = seatIndex;
+    } else if (section === "seatsMiddle") {
+      globalSeatNumber = leftSize + seatIndex;
+    } else if (section === "seatsRight") {
+      globalSeatNumber = leftSize + middleSize + seatIndex;
     }
-
-    if(seatStatus === "B" | seatStatus === "BW" | seatStatus === "BWC"){
-
-      onSeatDeselect && onSeatDeselect({
-        seat: selectedSeat
-      })
-
+  
+    const seatObject = {
+      row: rowData.row,
+      number: globalSeatNumber,
+      rowNumber: rowIndex + 1,
+    };
+  
+    const seatStatus = rowData[section][seatIndex];
+  
+    if (["NB", "NBW", "NBWC"].includes(seatStatus)) {
+      if (selectedSeats.length > totalTickets - 1) {
+        alert("You are trying to add more seats than you have selected.");
+        return;
+      }
+  
+      onSeatSelect && onSeatSelect({ seat: seatObject });
     }
-
-    setTheatrePreview(prev => (prev.map((row,index) => {
-      if(index !== rowIndex){
-        return row
-      }
-      return{
-        ...row, [section]: row[section].map((seat, index) => {
-        if(index === seatNumber){
-          if(seat === "B"){
-            return "NB"
-          }
-          if(seat === "NBW"){
-            return "BW"
-          }
-          if(seat === "NBWC"){
-            return "BWC"
-          }
-          if(seat === "BW"){
-            return "NBW"
-          }
-          if(seat === "BWC"){
-            return "NBWC"
-          }
-          
-          return ("B")
-        }
-        return seat
+  
+    if (["B", "BW", "BWC"].includes(seatStatus)) {
+      onSeatDeselect && onSeatDeselect({ seat: seatObject });
+    }
+  
+    // Update local theatrePreview state
+    setTheatrePreview(prev => (
+      prev.map((row, index) => {
+        if (index !== rowIndex) return row;
+        return {
+          ...row,
+          [section]: row[section].map((seat, idx) => {
+            if (idx !== seatIndex) return seat;
+            if (seat === "NB") return "B";
+            if (seat === "B") return "NB";
+            if (seat === "NBW") return "BW";
+            if (seat === "BW") return "NBW";
+            if (seat === "NBWC") return "BWC";
+            if (seat === "BWC") return "NBWC";
+            return seat;
+          })
+        };
       })
-      }
-    })))
-    
-    
-  }
+    ));
+  };  
 
   return (
   <div className="flex flex-col justify-center items-center gap-2">

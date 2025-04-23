@@ -419,7 +419,11 @@ const BookTicketPage = () => {
                         <CardDescription className="font-semibold mb-[30px]">{ticket.time}</CardDescription>
                         <CardDescription className="font-semibold mb-[30px]">{`Auditorium: ${ticket.auditorium}`}</CardDescription>
                         <div className="mt-[10px]">
-                        {!ticket.seatChosen ? ( <Button className="h-[20px] mt-[10px] w-fit" onClick={() => selectSeat(ticket.screentype)}>Select Seat</Button>) : (<p>{`Seat: ${ticket.seatChoice}`}</p>)}
+                        {!ticket.seatChosen ? ( <Button className="h-[20px] mt-[10px] w-fit" onClick={() => selectSeat(ticket.screentype)}>Select Seat</Button>) : (
+                          <p>
+                            Seat: {ticket.seatChoice?.row}-{ticket.seatChoice?.number}
+                          </p>
+)}
                         </div>
                       </CardHeader>
                     </Card>
