@@ -4,6 +4,77 @@ import { authenticateToken } from "../utils/middleware.js";
 
 const ticketRouter = express.Router();
 
+ticketRouter.post("/seat", authenticateToken, async (req, res) => {
+  const {
+    theatreLocation,
+    auditoriumNumber,
+    seatId,
+    number,
+    row,
+    status
+  } = req.body;
+
+  try {
+    // Check if seat already exists by row and number
+    const seatExists = await client.query(
+      `SELECT Seat_id FROM SEAT 
+      WHERE Theatre_location = $1 AND Auditorium_number = $2 AND Row = $3 AND Number = $4`,
+      [theatreLocation, auditoriumNumber, row, number]
+    );
+
+
+    if (seatExists.rowCount > 0) {
+      return res.status(200).json({ message: "Seat already exists." });
+    }
+
+    const seatInsert = await client.query(
+      `INSERT INTO SEAT (Theatre_location, Auditorium_number, Number, Row, Status)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING Seat_id`,
+      [theatreLocation, auditoriumNumber, number, row, status]
+    );
+    
+    const seatId = seatInsert.rows[0].seat_id;
+    
+    res.status(201).json({ message: "Seat created successfully.", seatId });
+    
+  } catch (err) {
+    console.error("Error creating seat:", err);
+    res.status(500).json({ error: "Failed to create seat." });
+  }
+});
+
+// Assuming you're using Express and PostgreSQL with a `client` or `pool` for db access
+ticketRouter.get('/seat/:seatId', async (req, res) => {
+  const { seatId } = req.params;
+
+  try {
+    const result = await client.query(
+      `SELECT 
+         Seat_id, 
+         CHR(Row + 64) AS Row,  -- converts 0 → 'A', 1 → 'B', etc.
+         Number, 
+         Auditorium_number, 
+         Theatre_location 
+       FROM Seat 
+       WHERE Seat_id = $1`,
+      [seatId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Seat not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Failed to fetch seat by ID:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+
+
 // Create ticket (Regular or Premium)
 ticketRouter.post("/", authenticateToken, async (req, res) => {
   const {

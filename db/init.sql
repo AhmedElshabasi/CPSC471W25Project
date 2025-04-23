@@ -37,7 +37,7 @@ FOREIGN KEY (Theatre_location) REFERENCES THEATRE(Location)
 CREATE TABLE SEAT(
 Theatre_location					VARCHAR(30)				NOT NULL,
 Auditorium_number					INT					    NOT NULL,
-Seat_id						        INT					    NOT NULL,
+Seat_id						        BIGSERIAL			    NOT NULL,
 Number						        INT					    NOT NULL,
 Row						            INT					    NOT NULL,
 Status						        BOOLEAN					NOT NULL,

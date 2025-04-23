@@ -40,31 +40,54 @@ const UsersPage = () => {
   const [tickets, setTickets] = useState([]);
   const [loadingTickets, setLoadingTickets] = useState(true);
 
-useEffect(() => {
-  const fetchTickets = async () => {
-    try {
-      const res = await fetch("http://localhost:3001/api/ticket", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to fetch tickets");
+  useEffect(() => {
+    const fetchTicketsAndSeats = async () => {
+      try {
+        const res = await fetch("http://localhost:3001/api/ticket", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+  
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to fetch tickets");
+        }
+  
+        // Fetch seat details for each ticket
+        const seatPromises = data.map((ticket) =>
+          fetch(`http://localhost:3001/api/ticket/seat/${ticket.seat_id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }).then((res) => res.json())
+        );
+  
+        const seatData = await Promise.all(seatPromises);
+  
+        // Map seat_id to seat details
+        const seatMap = {};
+        seatData.forEach((seat) => {
+          seatMap[seat.seat_id] = seat;
+        });
+  
+        // Attach seat details to tickets
+        const ticketsWithSeatInfo = data.map((ticket) => ({
+          ...ticket,
+          seatInfo: seatMap[ticket.seat_id],
+        }));
+  
+        setTickets(ticketsWithSeatInfo);
+      } catch (err) {
+        console.error("Error fetching tickets or seats:", err);
+        setTickets([]); // fallback to empty
+      } finally {
+        setLoadingTickets(false);
       }
-
-      setTickets(data);
-    } catch (err) {
-      console.error("Error fetching tickets:", err);
-      setTickets([]); // fallback to empty
-    } finally {
-      setLoadingTickets(false);
-    }
-  };
-
-  if (token) fetchTickets();
-}, [token,tickets]);
+    };
+  
+    if (token) fetchTicketsAndSeats();
+  }, [token, tickets]);
 
 const handleRefund = async (ticketId, ticketType) => {
   try {
@@ -313,7 +336,7 @@ const handleRefund = async (ticketId, ticketType) => {
                     })()}</p>
 
                     <p><strong>Theatre:</strong> {ticket.theatre_location}, Auditorium {ticket.auditorium_number}</p>
-                    <p><strong>Seat ID:</strong> {ticket.seat_id}</p>
+                    <p><strong>Seat:</strong> {ticket.seatInfo ? `${ticket.seatInfo.row}-${ticket.seatInfo.number}` : ticket.seat_id}</p>
                     {ticket.type === "Regular" && (
                       <p><strong>Recliner:</strong> {ticket.recliner_seat ? "Yes" : "No"}</p>
                     )}
