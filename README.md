@@ -82,6 +82,8 @@ http://localhost:5173/
 ```
 
 ## Documentation
+> Provides an guide to the website user interface and all functions.
+[User Guide](https://github.com/AhmedElshabasi/CPSC471W25Project/blob/main/CPSC471W25_SceneBook_UserGuide.pdf ) 
 
 ## License
 MIT
