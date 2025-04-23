@@ -430,6 +430,7 @@ const AdminHomePage = () => {
       setTheatreSuccess("");
       setTheatreError("An error occurred while adding the theatre.");
     }
+
   };
 
   const handleAddMovie = async () => {
